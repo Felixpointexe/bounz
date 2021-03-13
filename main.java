@@ -13,6 +13,7 @@ import java.io.OutputStream;
 import java.io.IOException; 
 
 
+
 game gm;
 
 public void setup() {
@@ -20,7 +21,7 @@ public void setup() {
   
   background(255);
 
-  gm = new game(1);
+  gm = new game(9);
 }
 
 public void draw() {
@@ -46,7 +47,7 @@ class game {
     levels.add(new level(new float[][]{{1, 0.48f, 0.25f, 0.04f, 0.2f}, {1, 0.48f, 0.55f, 0.04f, 0.2f}, {0, 0, 0.71f, 0.52f, 0.04f}, {0, 0.48f, 0.25f, 0.54f, 0.04f}}));
     levels.add(new level(new float[][]{{0,0,0.3f,0.2f,0.04f},{0,0.4f,0.3f,0.6f,0.04f},{0,0,0.6f,0.6f,0.04f},{0,0.8f,0.6f,0.2f,0.04f}}));
     levels.add(new level(new float[][]{{0,0,0.2f,0.43f,0.04f},{0,0.57f,0.2f,0.43f,0.04f}}));
-    levels.add(new level(new float[][]{}));
+    levels.add(new level(new float[][]{{0, 0.48f, 0.45f, 0.04f, 0.05f}, {0, 0.48f, 0.6f, 0.04f, 0.05f},{0, 0.48f, 0.75f, 0.04f, 0.05f},{1,0,0.42f,0.7f,0.02f},{1,0.5f,0.3f,0.5f,0.02f}}));
     levels.add(new level(new float[][]{}));
   }
 
@@ -59,6 +60,7 @@ class game {
     
   }
 }
+
 /*
 
         class: level
@@ -145,18 +147,18 @@ class level {
       Rectangle rectangle = Grectangles.get(i);
 
       //check X movment bounce
-      if (bx + 2*br + bvx > rectangle.x && 
+      if (bx + 1*br + bvx > rectangle.x && 
         bx + bvx < rectangle.x + rectangle.rectWidth && 
-        by + 2*br > rectangle.y && 
+        by + 1*br > rectangle.y && 
         by < rectangle.y + rectangle.rectHeight) {
 
         bvx *= -1;
       }
 
       //check Y movement bounce
-      if (bx + 2*br > rectangle.x && 
+      if (bx + 1*br > rectangle.x && 
         bx < rectangle.x + rectangle.rectWidth && 
-        by + 2*br + bvy > rectangle.y && 
+        by + 1*br + bvy > rectangle.y && 
         by + bvy < rectangle.y + rectangle.rectHeight) {
 
 
@@ -193,6 +195,8 @@ class level {
 
         reset();
       }
+      noStroke();
+
 
       fill(255, 115, 129);
       rect(rectangle.x, rectangle.y, rectangle.rectWidth, rectangle.rectHeight, 80);
