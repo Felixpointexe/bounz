@@ -12,21 +12,72 @@ import java.io.InputStream;
 import java.io.OutputStream; 
 import java.io.IOException; 
 
-
-
 game gm;
+button back_btn;
+button restart_btn;
 
 public void setup() {
 
   
   background(255);
+  
+  back_btn = new button(PApplet.parseInt(width*0.1f),PApplet.parseInt(height*0.05f),3,PApplet.parseInt(width*0.03f));
+  restart_btn = new button(PApplet.parseInt(width*0.9f),PApplet.parseInt(height*0.05f),0,PApplet.parseInt(width*0.03f));
 
-  gm = new game(9);
+  gm = new game(5);
 }
 
 public void draw() {
 
   gm.run();
+  back_btn.run();
+  restart_btn.run();
+}
+class bounce{
+  float x,y;
+  public float r;
+  
+  public bounce( float x, float y){
+    this.x = x;
+    this.y = y;
+    r = 0;
+  }
+  
+  public void run(){
+    fill(133, 255, 171,255*30/r-20);
+    ellipse(x,y,r,r);
+    r+= 3;
+    
+  }
+  
+  
+}
+class button {
+  int mode;
+  int x, y;
+  int r;
+
+  public button(int x, int y, int mode, int r) {
+    this.x = x;
+    this.y = y;
+    this.mode = mode;
+    this.r = r;
+  }
+
+  public void run() {
+    if (mode == 3) {
+      fill(255,60);
+      ellipse(x, y, 3*r, 3*r);
+      fill(255);
+      triangle(x-r, y, x+cos(PI/3)*r, y+sin(PI/3)*r, x+cos(PI/3)*r, y+sin(-1*PI/3)*r);
+    }
+    if (mode == 0) {
+      fill(255,60);
+      ellipse(x, y, 3*r, 3*r);
+      fill(255);
+      ellipse(x,y,2*r,2*r);
+    }
+  }
 }
 
 class game {
@@ -38,16 +89,20 @@ class game {
     lvl = sLvl;
 
     //adds lvls
+    /*
+     *   height*0.04
+     *
+     */
     levels.add(new level(new float[][]{}));
-    levels.add(new level(new float[][]{{0, 0, 0.38f, 0.6f, 0.04f}}));
-    levels.add(new level(new float[][]{{0, 0, 0.38f, 0.6f, 0.04f}, {0, 0.4f, 0.18f, 0.6f, 0.04f}}));
-    levels.add(new level(new float[][]{{0, 0, 0.38f, 0.6f, 0.04f}, {0, 0.4f, 0.18f, 0.6f, 0.04f}, {0, 0.4f, 0.58f, 0.6f, 0.04f}}));
-    levels.add(new level(new float[][]{{0, 0, 0.5f, 0.7f, 0.04f}, {0, 0.3f, 0.2f, 0.7f, 0.04f}, {0, 0.3f, 0.2f, 0.1f, 0.15f}, {0, 0.6f, 0.39f, 0.1f, 0.15f}}));
-    levels.add(new level(new float[][]{{0, 0, 0.38f, 0.5f, 0.04f}, {1, 0.5f, 0.18f, 0.5f, 0.04f}}));
-    levels.add(new level(new float[][]{{1, 0.48f, 0.25f, 0.04f, 0.2f}, {1, 0.48f, 0.55f, 0.04f, 0.2f}, {0, 0, 0.71f, 0.52f, 0.04f}, {0, 0.48f, 0.25f, 0.54f, 0.04f}}));
-    levels.add(new level(new float[][]{{0,0,0.3f,0.2f,0.04f},{0,0.4f,0.3f,0.6f,0.04f},{0,0,0.6f,0.6f,0.04f},{0,0.8f,0.6f,0.2f,0.04f}}));
-    levels.add(new level(new float[][]{{0,0,0.2f,0.43f,0.04f},{0,0.57f,0.2f,0.43f,0.04f}}));
-    levels.add(new level(new float[][]{{0, 0.48f, 0.45f, 0.04f, 0.05f}, {0, 0.48f, 0.6f, 0.04f, 0.05f},{0, 0.48f, 0.75f, 0.04f, 0.05f},{1,0,0.42f,0.7f,0.02f},{1,0.5f,0.3f,0.5f,0.02f}}));
+    levels.add(new level(new float[][]{{0, width*0, height*0.38f, width*0.6f, height*0.04f}}));
+    levels.add(new level(new float[][]{{0, width*0, height*0.38f, width*0.6f, height*0.04f}, {0, width*0.4f, height*0.18f, width*0.6f, height*0.04f}}));
+    levels.add(new level(new float[][]{{0, width*0, height*0.38f, width*0.6f, height*0.04f}, {0, width*0.4f, height*0.18f, width*0.6f, height*0.04f}, {0, width*0.4f, height*0.58f, width*0.6f, height*0.04f}}));
+    levels.add(new level(new float[][]{{0, width*0, height*0.5f, width*0.7f, height*0.04f}, {0, width*0.3f, height*0.2f, width*0.7f, height*0.04f}, {0, width*0.3f, height*0.2f, height*0.04f, height*0.15f}, {0, width*0.7f-height*0.04f, height*0.39f,height*0.04f, height*0.15f}}));
+    levels.add(new level(new float[][]{{0, width*0, height*0.38f, width*0.5f, height*0.04f}, {1, width*0.5f, height*0.18f, width*0.5f, height*0.04f}}));
+    levels.add(new level(new float[][]{{1, width*0.5f-height*0.02f, height*0.25f, height*0.04f, height*0.2f}, {1, width*0.5f-height*0.02f, height*0.55f, height*0.04f, height*0.2f}, {0, 0, height*0.71f, width*0.5f+height*0.02f, height*0.04f}, {0, width*0.5f-height*0.02f, height*0.25f, width*0.5f+height*0.02f, height*0.04f}}));
+    levels.add(new level(new float[][]{{0, width*0, height*0.3f, width*0.2f, height*0.04f}, {0, width*0.4f, height*0.3f, width*0.6f, height*0.04f}, {0, 0, height*0.6f, width*0.6f, height*0.04f}, {0, width*0.8f, height*0.6f, width*0.2f, height*0.04f}}));
+    levels.add(new level(new float[][]{{0, width*0, height*0.2f, width*0.43f, height*0.04f}, {0, width*0.57f, height*0.2f, width*0.43f, height*0.04f}}));
+    levels.add(new level(new float[][]{{0, width*0.48f, height*0.45f, width*0.04f, height*0.05f}, {0, width*0.48f, height*0.6f, width*0.04f, height*0.05f}, {0, width*0.48f, height*0.75f, width*0.04f, height*0.05f}, {1, 0, height*0.42f, width*0.7f, height*0.02f}, {1, width*0.5f, height*0.3f, width*0.5f, height*0.02f}}));
     levels.add(new level(new float[][]{}));
   }
 
@@ -57,15 +112,13 @@ class game {
       level level = levels.get(lvl-1);
       level.run();
     }
-    
   }
 }
-
 /*
 
-        class: level
-        
-*/
+ class: level
+ 
+ */
 
 
 class level {
@@ -75,65 +128,74 @@ class level {
   int br;   //ball radius
   float ba = 0;   //ball angle
 
+  int t = 0;
+
   int status = 0;   //status of game | 0 = waiting for player to give direction ; 1 = waiting for player to release mouse ; 2 = waiting for reset()
 
   ArrayList<Rectangle> Grectangles = new ArrayList<Rectangle>();   //list of all "good" rectangles
   ArrayList<Rectangle> Rrectangles = new ArrayList<Rectangle>();   //list of all "bad" rectangles
+  ArrayList<bounce> bounces = new ArrayList<bounce>();
 
   /*
      constructor(int[][])
-     -level data
-  */
+   -level data
+   */
   level(float[][] data) {
     for (int i = 0; i < data.length; i++) {
-      
+
       if (data[i][0] == 0) {   //if 1st parameter is 0 = "good" rectangle
-        Grectangles.add(new Rectangle(width*data[i][1], height*data[i][2], width*data[i][3], height*data[i][4]));
+        Grectangles.add(new Rectangle(data[i][1], data[i][2], data[i][3], data[i][4]));
       }
       if (data[i][0] == 1) {   //if 2nd parameter is 1 = "bad" rectangle
-        Rrectangles.add(new Rectangle(width*data[i][1], height*data[i][2], width*data[i][3], height*data[i][4]));
+        Rrectangles.add(new Rectangle(data[i][1], data[i][2], data[i][3], data[i][4]));
       }
-      
     }
 
     reset();   //resets level
   }
-  
+
   /*
      methode run()
-     : one tic 
-  */
+   : one tic 
+   */
   public void run() {
+    t+= width/40-1;
 
     background(255);
-    
+
     if (mousePressed && status < 2) {   //if mousePressed & status is "waiting for player to give direction" or "waiting for player to release mouse"
-      
+
       status = 1;   //sets staus to "waiting for player to release mouse"
 
-      stroke(0, 0, 0, 60);   //line color
-      line(width/2, PApplet.parseInt(height*0.9f), mouseX, mouseY);   //line for aming
+      stroke(0, 0, 0);   //line color
+      strokeWeight(width/400);
+      //line(width/2, int(height*0.9), mouseX, mouseY);   //line for aming
+
+      for (int i = 0; i < 100; i++) {
+        if ((i+t) % (width/40) < 5) {
+          line(width/2 + i*(mouseX-width/2)/100, height*0.9f - i*(height*0.9f-mouseY)/100, width/2 + (i-1)*(mouseX-width/2)/100, height*0.9f - (i-1)*(height*0.9f-mouseY)/100);
+        }
+      }
 
       ba = (atan2(height*0.9f-mouseY, mouseX-width/2)+ TWO_PI ) % TWO_PI;   //calculates the angle for the ball
-      
     } else {
-      
+
       if (status == 1) {   //if status is "waiting for player to release mouse"
         status = 2;   //sets status to "waiting for reset()"
-        
+
         bvx = cos(ba) * width/66;   //calculates ball x speed
         bvy = -1*sin(ba) * width/66;   //calculates ball y speed
       }
-      
     }
 
-    
+
 
 
     if (bx > width - br || bx < br) {   //if ball have to bounce on right or left wall
       bvx *= -1;
+      bounces.add(new bounce(bx, by));
     }
-    if (by > height - br ) {   //if ball is at buttom screen
+    if (by > height*0.98f - br ) {   //if ball is at buttom screen
       reset();
     }
     if (by < br + height/10 ) {   //if buttom is at top screen
@@ -153,6 +215,7 @@ class level {
         by < rectangle.y + rectangle.rectHeight) {
 
         bvx *= -1;
+        bounces.add(new bounce(bx, by));
       }
 
       //check Y movement bounce
@@ -163,6 +226,7 @@ class level {
 
 
         bvy *= -1;
+        bounces.add(new bounce(bx, by));
       }
 
       noStroke();
@@ -203,23 +267,39 @@ class level {
       fill(255, 115, 129, 60);
       rect(rectangle.x-width/20, rectangle.y-width/20, rectangle.rectWidth+width/10, rectangle.rectHeight+width/10, 80);
     }
-    
-    noStroke();
-    
-    fill(66, 170, 245);
-    rect(0,0,width,height/10);   //tob bar
 
-    fill(240, 171, 255);
+    for (int i = 0; i < bounces.size(); i++) {
+      if ( bounces.get(i).r < width/2) {
+        bounces.get(i).run();
+      }
+    }
+
+
+    noStroke();
+
+    fill(66, 170, 245);
+    rect(0, 0, width, height/10);   //tob bar
+    fill(133, 255, 171);
+    rect(0, height/10, width, height*0.02f);
+    fill(133, 255, 171, 120);
+    rect(0, height*0.12f, width, height*0.02f);
+
+    fill(255, 115, 129);   //buttom bar
+    rect(0,height*0.98f,width,height*0.02f);
+    fill(255, 115, 129, 60);
+    rect(0,height*0.96f,width,height*0.02f);
+
+    fill(255, 255, 255);
     textSize(width/10);
     textAlign(CENTER);
     text(gm.lvl, width/2, height*0.07f);
-    
+
     fill(133, 255, 171, 120);
     ellipse(width/2, PApplet.parseInt(height*0.9f), 4 * br, 4 * br);   //starting point
-    
+
     fill(133, 255, 171);
     ellipse(bx, by, 2 * br, 2 * br);   //ball
-    
+
 
 
     bx += bvx;   //calculates new ball x
@@ -231,7 +311,7 @@ class level {
     background(255);
     bvx = 0;
     bvy = 0;
-    
+
     bx = width/2;
     by = PApplet.parseInt(height*0.9f);
 
