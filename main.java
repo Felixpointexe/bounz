@@ -34,17 +34,21 @@ public void setup() {
 
 
 
-  levels.add(new level(new float[][]{{1, 0.5f, 0.5f, 0.2f, 0.25f}, {0, 0, 0, 0.8f, 0.1f}}));
-  levels.add(new level(new float[][]{{0, 0, 0.5f, 0.9f, 0.05f}, {0, 0.2f, 0.4f, 0.8f, 0.05f},{0, 0, 0.3f, 0.9f, 0.05f}, {0, 0.2f, 0.2f, 0.8f, 0.05f}}));
-  levels.add(new level(new float[][]{{1, 0.5f, 0.5f, 0.2f, 0.25f}, {0, 0, 0, 0.8f, 0.1f}}));
+  levels.add(new level(new float[][]{}));
+  levels.add(new level(new float[][]{{0,0,0.38f,0.6f,0.04f}}));
+  levels.add(new level(new float[][]{{0,0,0.38f,0.6f,0.04f},{0,0.4f,0.18f,0.6f,0.04f}}));
+  levels.add(new level(new float[][]{{0,0,0.38f,0.6f,0.04f},{0,0.4f,0.18f,0.6f,0.04f},{0,0.4f,0.58f,0.6f,0.04f}}));
+  levels.add(new level(new float[][]{{0,0,0.5f,0.7f,0.04f},{0,0.3f,0.2f,0.7f,0.04f},{0,0.3f,0.2f,0.1f,0.15f},{0,0.6f,0.39f,0.1f,0.15f}}));
+  
 }
 
 public void draw() {
-  if (lvl< levels.size()) {
-
+  
+  if (lvl <= levels.size()) {
     level level = levels.get(lvl-1);
     level.run();
   }
+  
 }
 class level {
 
@@ -76,11 +80,19 @@ class level {
   public void run() {
 
 
+    background(255);
+
+    fill(133, 255, 171 , 120);
+    noStroke();
+    ellipse(x, y, 4 * br, 4 * br);
+
+
     if (mousePressed && selectable < 2) {
       selectable = 1;
-      background(255);
+
       stroke(0, 0, 0, 60);
       line(x, y, mouseX, mouseY);
+      stroke(0);
 
       //println((atan2(y-mouseY, mouseX-x)+ TWO_PI ) % TWO_PI);
       a = (atan2(y-mouseY, mouseX-x)+ TWO_PI ) % TWO_PI;
@@ -94,22 +106,21 @@ class level {
       y = PApplet.parseInt(height*0.9f);
     }
 
-    fill(0, 255, 0, 60);
+    fill(133, 255, 171);
     noStroke();
     ellipse(bx, by, 2 * br, 2 * br);
 
-    bx += bvx;
-    by += bvy;
+
 
     if (bx > width - br || bx < br) {
       bvx *= -1;
     }
     if (by > height - br ) {
-      bvy *= -1;
+      reset();
     }
     if (by < br ) {
-      lvl++;
       reset();
+      lvl++;
     }
 
 
@@ -135,10 +146,13 @@ class level {
 
         bvy *= -1;
       }
-
-      fill(0, 255, 0, 60);
+      
       noStroke();
-      rect(rectangle.x, rectangle.y, rectangle.rectWidth, rectangle.rectHeight, 30);
+
+      fill(66, 170, 245);
+      rect(rectangle.x, rectangle.y, rectangle.rectWidth, rectangle.rectHeight, 0);
+      fill(66, 170, 245, 60);
+      rect(rectangle.x-width/20, rectangle.y-width/20, rectangle.rectWidth+width/10, rectangle.rectHeight+width/10,80);
     }
 
     for (int i = 0; i < Rrectangles.size(); i++) {
@@ -164,16 +178,19 @@ class level {
         reset();
       }
 
-      fill(255, 0, 0, 60);
+      fill(255, 0, 0);
       noStroke();
-      rect(rectangle.x, rectangle.y, rectangle.rectWidth, rectangle.rectHeight, 30);
+      rect(rectangle.x, rectangle.y, rectangle.rectWidth, rectangle.rectHeight, 0);
     }
-    
 
-    fill(210, 52, 235, 60);
+
+    fill(210, 52, 235);
     textSize(width/10);
     noStroke();
     text(lvl, width*0.1f, height*0.1f);
+
+    bx += bvx;
+    by += bvy;
   }
 
 
