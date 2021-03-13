@@ -39,6 +39,8 @@ public void setup() {
   levels.add(new level(new float[][]{{0,0,0.38f,0.6f,0.04f},{0,0.4f,0.18f,0.6f,0.04f}}));
   levels.add(new level(new float[][]{{0,0,0.38f,0.6f,0.04f},{0,0.4f,0.18f,0.6f,0.04f},{0,0.4f,0.58f,0.6f,0.04f}}));
   levels.add(new level(new float[][]{{0,0,0.5f,0.7f,0.04f},{0,0.3f,0.2f,0.7f,0.04f},{0,0.3f,0.2f,0.1f,0.15f},{0,0.6f,0.39f,0.1f,0.15f}}));
+  levels.add(new level(new float[][]{{0,0,0.38f,0.5f,0.04f},{1,0.5f,0.18f,0.5f,0.04f}}));
+  levels.add(new level(new float[][]{{1,0.48f,0.25f,0.04f,0.2f},{1,0.48f,0.55f,0.04f,0.2f},{0,0,0.71f,0.52f,0.04f},{0,0.48f,0.25f,0.54f,0.04f}}));
   
 }
 
@@ -99,8 +101,8 @@ class level {
     } else {
       if (selectable == 1) {
         selectable = 2;
-        bvx = cos(a) * 6;
-        bvy = -1*sin(a) * 6;
+        bvx = cos(a) * width/66;
+        bvy = -1*sin(a) * width/66;
       }
       x = width/2;
       y = PApplet.parseInt(height*0.9f);
@@ -150,7 +152,7 @@ class level {
       noStroke();
 
       fill(66, 170, 245);
-      rect(rectangle.x, rectangle.y, rectangle.rectWidth, rectangle.rectHeight, 0);
+      rect(rectangle.x, rectangle.y, rectangle.rectWidth, rectangle.rectHeight, 80);
       fill(66, 170, 245, 60);
       rect(rectangle.x-width/20, rectangle.y-width/20, rectangle.rectWidth+width/10, rectangle.rectHeight+width/10,80);
     }
@@ -178,9 +180,10 @@ class level {
         reset();
       }
 
-      fill(255, 0, 0);
-      noStroke();
-      rect(rectangle.x, rectangle.y, rectangle.rectWidth, rectangle.rectHeight, 0);
+      fill(255, 115, 129);
+      rect(rectangle.x, rectangle.y, rectangle.rectWidth, rectangle.rectHeight, 80);
+      fill(255, 115, 129, 60);
+      rect(rectangle.x-width/20, rectangle.y-width/20, rectangle.rectWidth+width/10, rectangle.rectHeight+width/10,80);
     }
 
 
