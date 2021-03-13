@@ -12,27 +12,39 @@ import java.io.InputStream;
 import java.io.OutputStream; 
 import java.io.IOException; 
 
+
+
+//game
 game gm;
-button back_btn;
-button restart_btn;
+menu mn;
+
+//user settings
+boolean darkmode = true;
+
+//app data
+int page = 0;   //0 = menu ; 1 = game
 
 public void setup() {
 
   
   background(255);
-  
-  back_btn = new button(PApplet.parseInt(width*0.1f),PApplet.parseInt(height*0.05f),3,PApplet.parseInt(width*0.03f));
-  restart_btn = new button(PApplet.parseInt(width*0.9f),PApplet.parseInt(height*0.05f),0,PApplet.parseInt(width*0.03f));
+
 
   gm = new game(5);
+  mn = new menu();
 }
 
 public void draw() {
+  
+  if (page == 0) {
+    mn.run();
+  }
 
-  gm.run();
-  back_btn.run();
-  restart_btn.run();
+  if (page == 1) {
+    gm.run();
+  }
 }
+
 class bounce{
   float x,y;
   public float r;
@@ -55,31 +67,51 @@ class bounce{
 class button {
   int mode;
   int x, y;
-  int r;
+  int r , col;
+  int click = 0;
 
-  public button(int x, int y, int mode, int r) {
+  public button(int x, int y, int mode, int r , int c) {
     this.x = x;
     this.y = y;
     this.mode = mode;
     this.r = r;
+    this.col = c;
   }
 
   public void run() {
+    int c;
+    if (darkmode) {
+      c = (1-col)*255;
+    } else {
+      c = (col)*255;
+    }
     if (mode == 3) {
-      fill(255,60);
+      fill(c, 60);
       ellipse(x, y, 3*r, 3*r);
-      fill(255);
+      fill(c);
       triangle(x-r, y, x+cos(PI/3)*r, y+sin(PI/3)*r, x+cos(PI/3)*r, y+sin(-1*PI/3)*r);
     }
     if (mode == 0) {
-      fill(255,60);
+      fill(c, 60);
       ellipse(x, y, 3*r, 3*r);
-      fill(255);
-      ellipse(x,y,2*r,2*r);
+      fill(c);
+      ellipse(x, y, 2*r, 2*r);
+    }
+    if (mode == 4) {
+      fill(c, 60);
+      ellipse(x, y, 3*r, 3*r);
+      fill(c);
+      quad(x-r, y, x, y+r, x+r, y,x,y-r);
     }
   }
-}
 
+  public boolean pressed() {
+    if (dist(x, y, mouseX, mouseY) <= 1.5f*r && mousePressed) {
+      return true;
+    }
+    return false;
+  }
+}
 class game {
   public int lvl;
 
@@ -113,7 +145,13 @@ class game {
       level.run();
     }
   }
+  
+  public void reset(){
+    level level = levels.get(lvl-1);
+    level.reset();
+  }
 }
+
 /*
 
  class: level
@@ -122,6 +160,9 @@ class game {
 
 
 class level {
+
+  button back_btn;
+  button restart_btn;
 
   float bx, by;   //ball x  &  ball y
   float bvx, bvy;   //ball x speed & ball y speed
@@ -152,6 +193,10 @@ class level {
     }
 
     reset();   //resets level
+
+
+    back_btn = new button(PApplet.parseInt(width*0.1f), PApplet.parseInt(height*0.05f), 3, PApplet.parseInt(width*0.03f),1);
+    restart_btn = new button(PApplet.parseInt(width*0.9f), PApplet.parseInt(height*0.05f), 0, PApplet.parseInt(width*0.03f),1);
   }
 
   /*
@@ -159,20 +204,39 @@ class level {
    : one tic 
    */
   public void run() {
-    t+= width/40-1;
 
-    background(255);
+    if (restart_btn.pressed()) {
+      reset();
+    }
+    if (back_btn.pressed()) {
+      page = 0;
+      reset();
+    }
 
-    if (mousePressed && status < 2) {   //if mousePressed & status is "waiting for player to give direction" or "waiting for player to release mouse"
+    t++;
+
+    if (darkmode) {
+      background(0);
+    } else {
+      background(255);
+    }
+
+
+
+    if (mousePressed && status < 2 && t > 10) {   //if mousePressed & status is "waiting for player to give direction" or "waiting for player to release mouse"
 
       status = 1;   //sets staus to "waiting for player to release mouse"
 
-      stroke(0, 0, 0);   //line color
+      if (darkmode) {   //line color
+        stroke(255);
+      } else {
+        stroke(0);
+      }   
       strokeWeight(width/400);
       //line(width/2, int(height*0.9), mouseX, mouseY);   //line for aming
 
       for (int i = 0; i < 100; i++) {
-        if ((i+t) % (width/40) < 5) {
+        if ((i+t*(width/40-1)) % (width/40) < width/80) {
           line(width/2 + i*(mouseX-width/2)/100, height*0.9f - i*(height*0.9f-mouseY)/100, width/2 + (i-1)*(mouseX-width/2)/100, height*0.9f - (i-1)*(height*0.9f-mouseY)/100);
         }
       }
@@ -201,6 +265,7 @@ class level {
     if (by < br + height/10 ) {   //if buttom is at top screen
       reset();
       gm.lvl++;
+      gm.reset();
     }
 
 
@@ -285,11 +350,15 @@ class level {
     rect(0, height*0.12f, width, height*0.02f);
 
     fill(255, 115, 129);   //buttom bar
-    rect(0,height*0.98f,width,height*0.02f);
+    rect(0, height*0.98f, width, height*0.02f);
     fill(255, 115, 129, 60);
-    rect(0,height*0.96f,width,height*0.02f);
+    rect(0, height*0.96f, width, height*0.02f);
 
-    fill(255, 255, 255);
+    if (darkmode) {
+      fill(0);
+    } else {
+      fill(255);
+    }
     textSize(width/10);
     textAlign(CENTER);
     text(gm.lvl, width/2, height*0.07f);
@@ -304,6 +373,9 @@ class level {
 
     bx += bvx;   //calculates new ball x
     by += bvy;   //calculates new ball y
+
+    back_btn.run();
+    restart_btn.run();
   }
 
 
@@ -311,6 +383,7 @@ class level {
     background(255);
     bvx = 0;
     bvy = 0;
+    t = 0;
 
     bx = width/2;
     by = PApplet.parseInt(height*0.9f);
@@ -319,7 +392,63 @@ class level {
     status = 0;
   }
 }
+class menu {
 
+  button darkmode_btn;
+
+  ArrayList<button> buttons = new ArrayList<button>();
+
+  menu() {
+
+
+    
+    darkmode_btn = new button(PApplet.parseInt(width*0.9f), PApplet.parseInt(height*0.05f), 4, PApplet.parseInt(width*0.03f), 1);
+
+    for ( int i = 0; i < gm.levels.size(); i++) {
+      buttons.add(new button(i % 3 * 100 + ( width/2 - 100), PApplet.parseInt((i - i%3) / 3 * 100 + height*0.2f), 0, width/10, 0));
+    }
+  }
+
+  public void run() {
+
+
+    if (darkmode) {
+      background(0);
+    } else {
+      background(255);
+    }
+
+    noStroke();
+
+    fill(66, 170, 245);
+    rect(0, 0, width, height/10);   //tob bar
+
+    darkmode_btn.run();
+
+    for (int i = 0; i < buttons.size(); i++) {
+      buttons.get(i).run();
+      if (buttons.get(i).pressed()) {
+        gm.lvl = i+1;
+        gm.reset();
+        page = 1;
+      }
+    }
+
+    if (darkmode_btn.pressed()) {
+
+      if (darkmode_btn.click == 0) {
+        darkmode_btn.click = 1;
+        if (darkmode) {
+          darkmode = false;
+        } else {
+          darkmode = true;
+        }
+      }
+    } else {
+      darkmode_btn.click = 0;
+    }
+  }
+}
 class Rectangle {
   float x;
   float y;
