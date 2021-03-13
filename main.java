@@ -12,121 +12,135 @@ import java.io.InputStream;
 import java.io.OutputStream; 
 import java.io.IOException; 
 
-public class sketch_210312c extends PApplet {
 
-
-int lvl = 1;
-
-ArrayList<Rectangle> Grectangles = new ArrayList<Rectangle>();
-ArrayList<Rectangle> Rrectangles = new ArrayList<Rectangle>();
-
-ArrayList<level> levels = new ArrayList<level>();
-
-
-
-
-
+game gm;
 
 public void setup() {
 
   
   background(255);
 
-
-
-  levels.add(new level(new float[][]{}));
-  levels.add(new level(new float[][]{{0,0,0.38f,0.6f,0.04f}}));
-  levels.add(new level(new float[][]{{0,0,0.38f,0.6f,0.04f},{0,0.4f,0.18f,0.6f,0.04f}}));
-  levels.add(new level(new float[][]{{0,0,0.38f,0.6f,0.04f},{0,0.4f,0.18f,0.6f,0.04f},{0,0.4f,0.58f,0.6f,0.04f}}));
-  levels.add(new level(new float[][]{{0,0,0.5f,0.7f,0.04f},{0,0.3f,0.2f,0.7f,0.04f},{0,0.3f,0.2f,0.1f,0.15f},{0,0.6f,0.39f,0.1f,0.15f}}));
-  levels.add(new level(new float[][]{{0,0,0.38f,0.5f,0.04f},{1,0.5f,0.18f,0.5f,0.04f}}));
-  levels.add(new level(new float[][]{{1,0.48f,0.25f,0.04f,0.2f},{1,0.48f,0.55f,0.04f,0.2f},{0,0,0.71f,0.52f,0.04f},{0,0.48f,0.25f,0.54f,0.04f}}));
-  
+  gm = new game(1);
 }
 
 public void draw() {
-  
-  if (lvl <= levels.size()) {
-    level level = levels.get(lvl-1);
-    level.run();
-  }
-  
+
+  gm.run();
 }
-class level {
 
-  int x, y;
+class game {
+  public int lvl;
 
-  float a = 0;
-  float bx, by;
-  float bvx, bvy;
-  int br;
+  ArrayList<level> levels = new ArrayList<level>();
 
-  int selectable;
+  game(int sLvl) {
+    lvl = sLvl;
 
-  ArrayList<Rectangle> Grectangles = new ArrayList<Rectangle>();
-  ArrayList<Rectangle> Rrectangles = new ArrayList<Rectangle>();
-
-  level(float[][] data) {
-    for (int i = 0; i < data.length; i++) {
-      if (data[i][0] == 0) {
-        Grectangles.add(new Rectangle(width*data[i][1], height*data[i][2], width*data[i][3], height*data[i][4]));
-      }
-      if (data[i][0] == 1) {
-        Rrectangles.add(new Rectangle(width*data[i][1], height*data[i][2], width*data[i][3], height*data[i][4]));
-      }
-    }
-
-    reset();
+    //adds lvls
+    levels.add(new level(new float[][]{}));
+    levels.add(new level(new float[][]{{0, 0, 0.38f, 0.6f, 0.04f}}));
+    levels.add(new level(new float[][]{{0, 0, 0.38f, 0.6f, 0.04f}, {0, 0.4f, 0.18f, 0.6f, 0.04f}}));
+    levels.add(new level(new float[][]{{0, 0, 0.38f, 0.6f, 0.04f}, {0, 0.4f, 0.18f, 0.6f, 0.04f}, {0, 0.4f, 0.58f, 0.6f, 0.04f}}));
+    levels.add(new level(new float[][]{{0, 0, 0.5f, 0.7f, 0.04f}, {0, 0.3f, 0.2f, 0.7f, 0.04f}, {0, 0.3f, 0.2f, 0.1f, 0.15f}, {0, 0.6f, 0.39f, 0.1f, 0.15f}}));
+    levels.add(new level(new float[][]{{0, 0, 0.38f, 0.5f, 0.04f}, {1, 0.5f, 0.18f, 0.5f, 0.04f}}));
+    levels.add(new level(new float[][]{{1, 0.48f, 0.25f, 0.04f, 0.2f}, {1, 0.48f, 0.55f, 0.04f, 0.2f}, {0, 0, 0.71f, 0.52f, 0.04f}, {0, 0.48f, 0.25f, 0.54f, 0.04f}}));
+    levels.add(new level(new float[][]{{0,0,0.3f,0.2f,0.04f},{0,0.4f,0.3f,0.6f,0.04f},{0,0,0.6f,0.6f,0.04f},{0,0.8f,0.6f,0.2f,0.04f}}));
+    levels.add(new level(new float[][]{{0,0,0.2f,0.43f,0.04f},{0,0.57f,0.2f,0.43f,0.04f}}));
+    levels.add(new level(new float[][]{}));
+    levels.add(new level(new float[][]{}));
   }
 
   public void run() {
 
+    if (lvl <= levels.size()) {
+      level level = levels.get(lvl-1);
+      level.run();
+    }
+    
+  }
+}
+/*
+
+        class: level
+        
+*/
+
+
+class level {
+
+  float bx, by;   //ball x  &  ball y
+  float bvx, bvy;   //ball x speed & ball y speed
+  int br;   //ball radius
+  float ba = 0;   //ball angle
+
+  int status = 0;   //status of game | 0 = waiting for player to give direction ; 1 = waiting for player to release mouse ; 2 = waiting for reset()
+
+  ArrayList<Rectangle> Grectangles = new ArrayList<Rectangle>();   //list of all "good" rectangles
+  ArrayList<Rectangle> Rrectangles = new ArrayList<Rectangle>();   //list of all "bad" rectangles
+
+  /*
+     constructor(int[][])
+     -level data
+  */
+  level(float[][] data) {
+    for (int i = 0; i < data.length; i++) {
+      
+      if (data[i][0] == 0) {   //if 1st parameter is 0 = "good" rectangle
+        Grectangles.add(new Rectangle(width*data[i][1], height*data[i][2], width*data[i][3], height*data[i][4]));
+      }
+      if (data[i][0] == 1) {   //if 2nd parameter is 1 = "bad" rectangle
+        Rrectangles.add(new Rectangle(width*data[i][1], height*data[i][2], width*data[i][3], height*data[i][4]));
+      }
+      
+    }
+
+    reset();   //resets level
+  }
+  
+  /*
+     methode run()
+     : one tic 
+  */
+  public void run() {
 
     background(255);
+    
+    if (mousePressed && status < 2) {   //if mousePressed & status is "waiting for player to give direction" or "waiting for player to release mouse"
+      
+      status = 1;   //sets staus to "waiting for player to release mouse"
 
-    fill(133, 255, 171 , 120);
-    noStroke();
-    ellipse(x, y, 4 * br, 4 * br);
+      stroke(0, 0, 0, 60);   //line color
+      line(width/2, PApplet.parseInt(height*0.9f), mouseX, mouseY);   //line for aming
 
-
-    if (mousePressed && selectable < 2) {
-      selectable = 1;
-
-      stroke(0, 0, 0, 60);
-      line(x, y, mouseX, mouseY);
-      stroke(0);
-
-      //println((atan2(y-mouseY, mouseX-x)+ TWO_PI ) % TWO_PI);
-      a = (atan2(y-mouseY, mouseX-x)+ TWO_PI ) % TWO_PI;
+      ba = (atan2(height*0.9f-mouseY, mouseX-width/2)+ TWO_PI ) % TWO_PI;   //calculates the angle for the ball
+      
     } else {
-      if (selectable == 1) {
-        selectable = 2;
-        bvx = cos(a) * width/66;
-        bvy = -1*sin(a) * width/66;
+      
+      if (status == 1) {   //if status is "waiting for player to release mouse"
+        status = 2;   //sets status to "waiting for reset()"
+        
+        bvx = cos(ba) * width/66;   //calculates ball x speed
+        bvy = -1*sin(ba) * width/66;   //calculates ball y speed
       }
-      x = width/2;
-      y = PApplet.parseInt(height*0.9f);
+      
     }
 
-    fill(133, 255, 171);
-    noStroke();
-    ellipse(bx, by, 2 * br, 2 * br);
+    
 
 
-
-    if (bx > width - br || bx < br) {
+    if (bx > width - br || bx < br) {   //if ball have to bounce on right or left wall
       bvx *= -1;
     }
-    if (by > height - br ) {
+    if (by > height - br ) {   //if ball is at buttom screen
       reset();
     }
-    if (by < br ) {
+    if (by < br + height/10 ) {   //if buttom is at top screen
       reset();
-      lvl++;
+      gm.lvl++;
     }
 
 
-    for (int i = 0; i < Grectangles.size(); i++) {
+    for (int i = 0; i < Grectangles.size(); i++) {   //all "good" rectangles
 
       Rectangle rectangle = Grectangles.get(i);
 
@@ -148,16 +162,16 @@ class level {
 
         bvy *= -1;
       }
-      
+
       noStroke();
 
       fill(66, 170, 245);
       rect(rectangle.x, rectangle.y, rectangle.rectWidth, rectangle.rectHeight, 80);
       fill(66, 170, 245, 60);
-      rect(rectangle.x-width/20, rectangle.y-width/20, rectangle.rectWidth+width/10, rectangle.rectHeight+width/10,80);
+      rect(rectangle.x-width/20, rectangle.y-width/20, rectangle.rectWidth+width/10, rectangle.rectHeight+width/10, 80);
     }
 
-    for (int i = 0; i < Rrectangles.size(); i++) {
+    for (int i = 0; i < Rrectangles.size(); i++) {   //all "bad" rectangles
 
       Rectangle rectangle = Rrectangles.get(i);
 
@@ -183,31 +197,45 @@ class level {
       fill(255, 115, 129);
       rect(rectangle.x, rectangle.y, rectangle.rectWidth, rectangle.rectHeight, 80);
       fill(255, 115, 129, 60);
-      rect(rectangle.x-width/20, rectangle.y-width/20, rectangle.rectWidth+width/10, rectangle.rectHeight+width/10,80);
+      rect(rectangle.x-width/20, rectangle.y-width/20, rectangle.rectWidth+width/10, rectangle.rectHeight+width/10, 80);
     }
-
-
-    fill(210, 52, 235);
-    textSize(width/10);
+    
     noStroke();
-    text(lvl, width*0.1f, height*0.1f);
+    
+    fill(66, 170, 245);
+    rect(0,0,width,height/10);   //tob bar
 
-    bx += bvx;
-    by += bvy;
+    fill(240, 171, 255);
+    textSize(width/10);
+    textAlign(CENTER);
+    text(gm.lvl, width/2, height*0.07f);
+    
+    fill(133, 255, 171, 120);
+    ellipse(width/2, PApplet.parseInt(height*0.9f), 4 * br, 4 * br);   //starting point
+    
+    fill(133, 255, 171);
+    ellipse(bx, by, 2 * br, 2 * br);   //ball
+    
+
+
+    bx += bvx;   //calculates new ball x
+    by += bvy;   //calculates new ball y
   }
 
 
   public void reset() {
     background(255);
-    bx = width/2;
-    by = PApplet.parseInt(height*0.9f);
     bvx = 0;
     bvy = 0;
+    
+    bx = width/2;
+    by = PApplet.parseInt(height*0.9f);
 
     br = width/40;
-    selectable = 0;
+    status = 0;
   }
 }
+
 class Rectangle {
   float x;
   float y;
@@ -221,13 +249,4 @@ class Rectangle {
     this.rectHeight = rectHeight;
   }
 }
-  public void settings() {  size(400, 800); }
-  static public void main(String[] passedArgs) {
-    String[] appletArgs = new String[] { "sketch_210312c" };
-    if (passedArgs != null) {
-      PApplet.main(concat(appletArgs, passedArgs));
-    } else {
-      PApplet.main(appletArgs);
-    }
-  }
-}
+
