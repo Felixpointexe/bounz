@@ -1,4 +1,4 @@
-package processing.test.bounz_4;
+
 
 import processing.core.*; 
 import processing.data.*; 
@@ -19,7 +19,7 @@ import java.io.InputStream;
 import java.io.OutputStream; 
 import java.io.IOException; 
 
-public class bounz_4 extends PApplet {
+
 
 
 
@@ -526,5 +526,4 @@ class Rectangle {
     this.rectHeight = rectHeight;
   }
 }
-  public void settings() {  size(400, 800); }
-}
+
