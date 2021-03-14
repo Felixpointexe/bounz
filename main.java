@@ -1,7 +1,14 @@
+package processing.test.bounz_4;
+
 import processing.core.*; 
 import processing.data.*; 
 import processing.event.*; 
 import processing.opengl.*; 
+
+import android.content.SharedPreferences; 
+import android.preference.PreferenceManager; 
+import android.content.Context; 
+import android.app.Activity; 
 
 import java.util.HashMap; 
 import java.util.ArrayList; 
@@ -12,6 +19,17 @@ import java.io.InputStream;
 import java.io.OutputStream; 
 import java.io.IOException; 
 
+public class bounz_4 extends PApplet {
+
+
+
+
+
+
+Activity act;
+Context cnt;
+SharedPreferences sp;
+SharedPreferences.Editor editor;
 
 
 //game
@@ -23,6 +41,15 @@ boolean darkmode = true;
 
 //app data
 int page = 0;   //0 = menu ; 1 = game
+int unlockedLvl;
+String unlockedLvlFile;
+
+
+//colors
+int blue = color(66, 170, 245);
+int green = color(133, 255, 171);
+int red = color(255, 115, 129);
+
 
 public void setup() {
 
@@ -32,10 +59,18 @@ public void setup() {
 
   gm = new game(5);
   mn = new menu();
+
+  act = this.getActivity();
+  cnt = act.getApplicationContext();
+  sp = PreferenceManager.getDefaultSharedPreferences(cnt);
+  editor = sp.edit();
+
+  unlockedLvlFile = "unlockedLvl";
+  unlockedLvl = load(unlockedLvlFile);
 }
 
 public void draw() {
-  
+
   if (page == 0) {
     mn.run();
   }
@@ -45,6 +80,15 @@ public void draw() {
   }
 }
 
+public void save(int value, String name) {
+  //editor.clear();
+  editor.putInt(name, value);
+  editor.commit();
+}
+
+public int load(String name) {
+  return sp.getInt(name, 0);
+}
 class bounce{
   float x,y;
   public float r;
@@ -67,23 +111,30 @@ class bounce{
 class button {
   int mode;
   int x, y;
-  int r , col;
+  int r ;
   int click = 0;
+  int dc,lc;
+  String txt = "";
 
-  public button(int x, int y, int mode, int r , int c) {
+  public button(int x, int y, int mode, int r , int dc , int lc) {
     this.x = x;
     this.y = y;
     this.mode = mode;
     this.r = r;
-    this.col = c;
+    this.dc = dc;
+    this.lc = lc;
+  }
+  
+  public void addTxt(String txt){
+    this.txt = txt;
   }
 
   public void run() {
     int c;
     if (darkmode) {
-      c = (1-col)*255;
+      c = dc;
     } else {
-      c = (col)*255;
+      c = lc;
     }
     if (mode == 3) {
       fill(c, 60);
@@ -103,6 +154,15 @@ class button {
       fill(c);
       quad(x-r, y, x, y+r, x+r, y,x,y-r);
     }
+    
+    if (darkmode) {
+      fill(0);
+    } else {
+      fill(255);
+    }
+    textSize(r*0.8f);
+    textAlign(CENTER);
+    text(txt,x,y+r*0.3f);
   }
 
   public boolean pressed() {
@@ -129,7 +189,7 @@ class game {
     levels.add(new level(new float[][]{{0, width*0, height*0.38f, width*0.6f, height*0.04f}}));
     levels.add(new level(new float[][]{{0, width*0, height*0.38f, width*0.6f, height*0.04f}, {0, width*0.4f, height*0.18f, width*0.6f, height*0.04f}}));
     levels.add(new level(new float[][]{{0, width*0, height*0.38f, width*0.6f, height*0.04f}, {0, width*0.4f, height*0.18f, width*0.6f, height*0.04f}, {0, width*0.4f, height*0.58f, width*0.6f, height*0.04f}}));
-    levels.add(new level(new float[][]{{0, width*0, height*0.5f, width*0.7f, height*0.04f}, {0, width*0.3f, height*0.2f, width*0.7f, height*0.04f}, {0, width*0.3f, height*0.2f, height*0.04f, height*0.15f}, {0, width*0.7f-height*0.04f, height*0.39f,height*0.04f, height*0.15f}}));
+    levels.add(new level(new float[][]{{0, width*0, height*0.5f, width*0.7f, height*0.04f}, {0, width*0.3f, height*0.2f, width*0.7f, height*0.04f}, {0, width*0.3f, height*0.2f, height*0.04f, height*0.15f}, {0, width*0.7f-height*0.04f, height*0.39f, height*0.04f, height*0.15f}}));
     levels.add(new level(new float[][]{{0, width*0, height*0.38f, width*0.5f, height*0.04f}, {1, width*0.5f, height*0.18f, width*0.5f, height*0.04f}}));
     levels.add(new level(new float[][]{{1, width*0.5f-height*0.02f, height*0.25f, height*0.04f, height*0.2f}, {1, width*0.5f-height*0.02f, height*0.55f, height*0.04f, height*0.2f}, {0, 0, height*0.71f, width*0.5f+height*0.02f, height*0.04f}, {0, width*0.5f-height*0.02f, height*0.25f, width*0.5f+height*0.02f, height*0.04f}}));
     levels.add(new level(new float[][]{{0, width*0, height*0.3f, width*0.2f, height*0.04f}, {0, width*0.4f, height*0.3f, width*0.6f, height*0.04f}, {0, 0, height*0.6f, width*0.6f, height*0.04f}, {0, width*0.8f, height*0.6f, width*0.2f, height*0.04f}}));
@@ -145,13 +205,16 @@ class game {
       level.run();
     }
   }
-  
-  public void reset(){
-    level level = levels.get(lvl-1);
-    level.reset();
+
+  public void reset() {
+    if (lvl <= levels.size()) {
+      level level = levels.get(lvl-1);
+      level.reset();
+    }else{
+      page = 0;
+    }
   }
 }
-
 /*
 
  class: level
@@ -195,8 +258,8 @@ class level {
     reset();   //resets level
 
 
-    back_btn = new button(PApplet.parseInt(width*0.1f), PApplet.parseInt(height*0.05f), 3, PApplet.parseInt(width*0.03f),1);
-    restart_btn = new button(PApplet.parseInt(width*0.9f), PApplet.parseInt(height*0.05f), 0, PApplet.parseInt(width*0.03f),1);
+    back_btn = new button(PApplet.parseInt(width*0.1f), PApplet.parseInt(height*0.05f), 3, PApplet.parseInt(width*0.03f),color(0),color(255));
+    restart_btn = new button(PApplet.parseInt(width*0.9f), PApplet.parseInt(height*0.05f), 0, PApplet.parseInt(width*0.03f),color(0),color(255));
   }
 
   /*
@@ -296,9 +359,9 @@ class level {
 
       noStroke();
 
-      fill(66, 170, 245);
+      fill(blue);
       rect(rectangle.x, rectangle.y, rectangle.rectWidth, rectangle.rectHeight, 80);
-      fill(66, 170, 245, 60);
+      fill(blue , 60);
       rect(rectangle.x-width/20, rectangle.y-width/20, rectangle.rectWidth+width/10, rectangle.rectHeight+width/10, 80);
     }
 
@@ -327,9 +390,9 @@ class level {
       noStroke();
 
 
-      fill(255, 115, 129);
+      fill(red);
       rect(rectangle.x, rectangle.y, rectangle.rectWidth, rectangle.rectHeight, 80);
-      fill(255, 115, 129, 60);
+      fill(red, 60);
       rect(rectangle.x-width/20, rectangle.y-width/20, rectangle.rectWidth+width/10, rectangle.rectHeight+width/10, 80);
     }
 
@@ -342,16 +405,16 @@ class level {
 
     noStroke();
 
-    fill(66, 170, 245);
+    fill(blue);
     rect(0, 0, width, height/10);   //tob bar
-    fill(133, 255, 171);
+    fill(green);
     rect(0, height/10, width, height*0.02f);
-    fill(133, 255, 171, 120);
+    fill(green, 120);
     rect(0, height*0.12f, width, height*0.02f);
 
-    fill(255, 115, 129);   //buttom bar
+    fill(red);   //buttom bar
     rect(0, height*0.98f, width, height*0.02f);
-    fill(255, 115, 129, 60);
+    fill(red, 60);
     rect(0, height*0.96f, width, height*0.02f);
 
     if (darkmode) {
@@ -363,10 +426,10 @@ class level {
     textAlign(CENTER);
     text(gm.lvl, width/2, height*0.07f);
 
-    fill(133, 255, 171, 120);
+    fill(green, 120);
     ellipse(width/2, PApplet.parseInt(height*0.9f), 4 * br, 4 * br);   //starting point
 
-    fill(133, 255, 171);
+    fill(green);
     ellipse(bx, by, 2 * br, 2 * br);   //ball
 
 
@@ -402,10 +465,11 @@ class menu {
 
 
     
-    darkmode_btn = new button(PApplet.parseInt(width*0.9f), PApplet.parseInt(height*0.05f), 4, PApplet.parseInt(width*0.03f), 1);
+    darkmode_btn = new button(PApplet.parseInt(width*0.9f), PApplet.parseInt(height*0.05f), 4, PApplet.parseInt(width*0.03f), color(0),color(255));
 
     for ( int i = 0; i < gm.levels.size(); i++) {
-      buttons.add(new button(i % 3 * 100 + ( width/2 - 100), PApplet.parseInt((i - i%3) / 3 * 100 + height*0.2f), 0, width/10, 0));
+      buttons.add(new button(i % 3 * width/4 + ( width/2 - width/4), PApplet.parseInt((i - i%3) / 3 * width/4 + height*0.2f), 0, width/13, color(green),color(green)));
+      buttons.get(i).addTxt(str(i+1));
     }
   }
 
@@ -427,7 +491,7 @@ class menu {
 
     for (int i = 0; i < buttons.size(); i++) {
       buttons.get(i).run();
-      if (buttons.get(i).pressed()) {
+      if (buttons.get(i).pressed() ) {
         gm.lvl = i+1;
         gm.reset();
         page = 1;
@@ -462,4 +526,5 @@ class Rectangle {
     this.rectHeight = rectHeight;
   }
 }
-
+  public void settings() {  size(400, 800); }
+}
