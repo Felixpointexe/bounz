@@ -1,5 +1,3 @@
-package processing.test.bounz_4;
-
 import processing.core.*; 
 import processing.data.*; 
 import processing.event.*; 
@@ -14,7 +12,9 @@ import java.io.InputStream;
 import java.io.OutputStream; 
 import java.io.IOException; 
 
+public class bounz_4 extends PApplet {
 
+/*
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.content.Context;
@@ -25,7 +25,7 @@ Context cnt;
 SharedPreferences sp;
 SharedPreferences.Editor editor;
 
-
+*/
 
 //game
 game gm;
@@ -33,6 +33,7 @@ menu mn;
 
 //user settings
 boolean darkmode = true;
+boolean music =true;
 
 //app data
 int page = 0;   //0 = menu ; 1 = game
@@ -50,12 +51,13 @@ public void setup() {
 
   
   background(255);
+  //orientation(PORTRAIT);  
 
 
   gm = new game(5);
   mn = new menu();
   
-  
+  /*
   act = this.getActivity();
   cnt = act.getApplicationContext();
   sp = PreferenceManager.getDefaultSharedPreferences(cnt);
@@ -63,7 +65,7 @@ public void setup() {
 
   unlockedLvlFile = "unlockedLvl";
   unlockedLvl = load(unlockedLvlFile);
-  
+  */
 }
 
 public void draw() {
@@ -77,7 +79,7 @@ public void draw() {
   }
 }
 
-
+/*
 void save(int value, String name) {
   //editor.clear();
   editor.putInt(name, value);
@@ -87,7 +89,7 @@ void save(int value, String name) {
 int load(String name) {
   return sp.getInt(name, 0);
 }
-
+*/
 class bounce{
   float x,y;
   public float r;
@@ -149,6 +151,12 @@ class button {
       fill(c);
       triangle(x-r, y, x+cos(PI/3)*r, y+sin(PI/3)*r, x+cos(PI/3)*r, y+sin(-1*PI/3)*r);
     }
+    if (mode == 31) {
+      fill(c, 60);
+      ellipse(x, y, 3*r, 3*r);
+      fill(c);
+      triangle(x+r, y, x-cos(PI/3)*r, y+sin(PI/3)*r, x-cos(PI/3)*r, y+sin(-1*PI/3)*r);
+    }
     if (mode == 0) {
       fill(c, 60);
       ellipse(x, y, 3*r, 3*r);
@@ -173,7 +181,7 @@ class button {
   }
 
   public boolean pressed() {
-    if (dist(x, y, mouseX, mouseY) <= 1.5f*r && mousePressed && !locked) {
+    if (dist(x, y, mouseX, mouseY) <= 1.5f*r && mousePressed) {
       return true;
     }
     return false;
@@ -336,7 +344,7 @@ class level {
       reset();
       gm.lvl++;
       unlockedLvl ++;
-      save(unlockedLvl,unlockedLvlFile);
+      //save(unlockedLvl,unlockedLvlFile);
       gm.reset();
     }
 
@@ -452,7 +460,7 @@ class level {
 
 
   public void reset() {
-    background(255);
+    //background(255);
     bvx = 0;
     bvy = 0;
     t = 0;
@@ -467,17 +475,19 @@ class level {
 class menu {
 
   button darkmode_btn;
+  button music_btn;
 
   ArrayList<button> buttons = new ArrayList<button>();
 
   menu() {
 
 
-    
-    darkmode_btn = new button(PApplet.parseInt(width*0.9f), PApplet.parseInt(height*0.05f), 4, PApplet.parseInt(width*0.03f), color(0),color(255),color(255));
+
+    darkmode_btn = new button(PApplet.parseInt(width*0.9f), PApplet.parseInt(height*0.05f), 4, PApplet.parseInt(width*0.03f), color(0), color(255), color(255));
+    music_btn = new button(PApplet.parseInt(width*0.1f), PApplet.parseInt(height*0.05f), 31, PApplet.parseInt(width*0.03f), color(green), color(green), color(red));
 
     for ( int i = 0; i < gm.levels.size(); i++) {
-      buttons.add(new button(i % 3 * width/4 + ( width/2 - width/4), PApplet.parseInt((i - i%3) / 3 * width/4 + height*0.2f), 0, width/13, color(green),color(green),color(red)));
+      buttons.add(new button(i % 3 * width/4 + ( width/2 - width/4), PApplet.parseInt((i - i%3) / 3 * width/4 + height*0.2f), 0, width/13, color(green), color(green), color(red)));
       buttons.get(i).addTxt(str(i+1));
     }
   }
@@ -496,16 +506,19 @@ class menu {
     fill(66, 170, 245);
     rect(0, 0, width, height/10);   //tob bar
 
+
+    music_btn.run();
     darkmode_btn.run();
+
 
     for (int i = 0; i < buttons.size(); i++) {
       buttons.get(i).run();
-      if(unlockedLvl < i){
+      if (unlockedLvl < i) {
         buttons.get(i).locked = true;
-      }else{
+      } else {
         buttons.get(i).locked = false;
       }
-      if (buttons.get(i).pressed() ) {
+      if (buttons.get(i).pressed() && buttons.get(i).locked == false ) {
         gm.lvl = i+1;
         gm.reset();
         page = 1;
@@ -525,6 +538,23 @@ class menu {
     } else {
       darkmode_btn.click = 0;
     }
+    
+    
+    if (music_btn.pressed()) {
+
+      if (music_btn.click == 0) {
+        music_btn.click = 1;
+        if (music) {
+          music = false;
+          music_btn.locked = true;
+        } else {
+          music = true;
+          music_btn.locked = false;
+        }
+      }
+    } else {
+      music_btn.click = 0;
+    }
   }
 }
 class Rectangle {
@@ -540,4 +570,13 @@ class Rectangle {
     this.rectHeight = rectHeight;
   }
 }
-
+  public void settings() {  size(400, 800); }
+  static public void main(String[] passedArgs) {
+    String[] appletArgs = new String[] { "bounz_4" };
+    if (passedArgs != null) {
+      PApplet.main(concat(appletArgs, passedArgs));
+    } else {
+      PApplet.main(appletArgs);
+    }
+  }
+}
