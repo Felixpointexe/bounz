@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.io.OutputStream; 
 import java.io.IOException; 
 
+public class bounz_5 extends PApplet {
 
 
 import android.content.SharedPreferences;
@@ -29,9 +30,10 @@ SharedPreferences.Editor editor;
 //game
 game gm;
 menu mn;
+help hlp;
 
 //user settings
-boolean darkmode = true;
+boolean darkmode = false;
 boolean music =true;
 
 //app data
@@ -55,6 +57,7 @@ public void setup() {
 
   gm = new game(5);
   mn = new menu();
+  hlp = new help();
   
   
   act = this.getActivity();
@@ -75,6 +78,10 @@ public void draw() {
 
   if (page == 1) {
     gm.run();
+  }
+  
+  if (page == 2) {
+    hlp.run();
   }
 }
 
@@ -168,6 +175,14 @@ class button {
       fill(c);
       quad(x-r, y, x, y+r, x+r, y,x,y-r);
     }
+    if (mode == 2) {
+      fill(c, 60);
+      ellipse(x, y, 3*r, 3*r);
+      fill(c);
+      stroke(c);
+      strokeWeight(width/66);
+      line(x, y+r-width/66, x, y-r+width/66);
+    }
     
     if (darkmode) {
       fill(0);
@@ -245,6 +260,85 @@ class game {
       mn.y = 0;
       page = 0;
     }
+  }
+}
+class help {
+
+  button back_btn;
+
+  int y, ys;
+  int Mstatus;
+
+  help() {
+    back_btn = new button(PApplet.parseInt(width*0.1f), PApplet.parseInt(height*0.05f), 3, PApplet.parseInt(width*0.03f), color(0), color(255), color(0));
+  }
+
+  public void run() {
+
+    if (darkmode) {
+      background(0);
+    } else {
+      background(255);
+    }
+
+    noStroke();
+
+
+
+    if (mousePressed && mouseY > height*0.1f) {
+
+      if (Mstatus == 0) {
+        Mstatus = 1;
+        ys = mouseY-y;
+      } else {
+
+        y = mouseY - ys;
+        if (y > 0) y = 0;
+        if(y < -1* width*2.6f + height*0.8f) y = PApplet.parseInt(-1* width*2.6f+ height*0.8f);
+      }
+    } else {
+      Mstatus = 0;
+    }
+    
+    if (darkmode) {
+      fill(255);
+    } else {
+      fill(0);
+    }
+    textSize(width*0.05f);
+    textAlign(LEFT);
+
+    text("The goal is it to shoot the green ball to the top of the sreen by tipping or draging the aming line. When released the ball will shoot automaticly.", width*0.1f, height*0.15f+y, width*0.8f, height);
+    text("blue boxes are 'good' boxes which let the ball bounce. If the ball touches a red box, the level will reset.", width*0.1f, width*0.7f+y, width*0.8f, height);
+    
+    stroke (blue);
+    strokeWeight(width/120);
+    line(0,width*1.1f+y , width,width*1.1f+y);
+    
+    text("Das Ziel ist es den grünen Ball an den oberen Bildschirmrand zu schießen, indem man durch tipen oder ziehen die Ziel-linie bewegt. Wenn man los lässt schießt der Ball automatisch", width*0.1f, width*1.2f+y, width*0.8f, height);
+    text("Blau Boxen sind 'gute' Boxen, welche den Ball abprallen lassen. Wenn der Ball eine rote Box berührt, wird das level zurück gesetzt.", width*0.1f, width*1.7f+y, width*0.8f, height);
+    
+    line(0,width*2.3f+y , width,width*2.3f+y);
+    
+    textAlign(CENTER);
+
+    text("made by Felix", width*0.1f, width*2.4f+y, width*0.8f, height);
+    text("https://github.com/Felixpointexe/bounz", width*0.1f, width*2.5f+y, width*0.8f, height);
+
+
+    fill(blue);
+    noStroke();
+    rect(0, 0, width, height/10);   //tob bar
+
+    back_btn.run();
+
+    if (back_btn.pressed()) {
+      mn.y = 0;
+      page = 0;
+    }
+
+
+    
   }
 }
 /*
@@ -494,6 +588,7 @@ class menu {
 
   button darkmode_btn;
   button music_btn;
+  button help_btn;
 
   int y, ys;
   int Mstatus;
@@ -506,6 +601,7 @@ class menu {
 
     darkmode_btn = new button(PApplet.parseInt(width*0.9f), PApplet.parseInt(height*0.05f), 4, PApplet.parseInt(width*0.03f), color(0), color(255), color(255));
     music_btn = new button(PApplet.parseInt(width*0.1f), PApplet.parseInt(height*0.05f), 31, PApplet.parseInt(width*0.03f), color(green), color(green), color(red));
+    help_btn = new button(PApplet.parseInt(width*0.5f), PApplet.parseInt(height*0.05f), 2, PApplet.parseInt(width*0.03f), color(0), color(255), color(255));
 
     for ( int i = 0; i < gm.levels.size(); i++) {
       buttons.add(new button(i % 3 * width/4 + ( width/2 - width/4), PApplet.parseInt((i - i%3) / 3 * width/4 + height*0.2f), 0, width/13, color(green), color(green), color(red)));
@@ -574,12 +670,17 @@ class menu {
       music_btn.click = 0;
     }
     
-    fill(66, 170, 245);
+    if (help_btn.pressed()) {
+      page = 2;
+    }
+    
+    fill(blue);
     rect(0, 0, width, height/10);   //tob bar
 
 
     music_btn.run();
     darkmode_btn.run();
+    help_btn.run();
 
 
 
@@ -608,6 +709,7 @@ class menu {
     }
   }
 }
+
 class Rectangle {
   float x;
   float y;
@@ -621,3 +723,4 @@ class Rectangle {
     this.rectHeight = rectHeight;
   }
 }
+
