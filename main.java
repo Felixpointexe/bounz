@@ -12,9 +12,8 @@ import java.io.InputStream;
 import java.io.OutputStream; 
 import java.io.IOException; 
 
-public class bounz_4 extends PApplet {
 
-/*
+
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.content.Context;
@@ -25,7 +24,7 @@ Context cnt;
 SharedPreferences sp;
 SharedPreferences.Editor editor;
 
-*/
+
 
 //game
 game gm;
@@ -51,13 +50,13 @@ public void setup() {
 
   
   background(255);
-  //orientation(PORTRAIT);  
+  orientation(PORTRAIT);  
 
 
   gm = new game(5);
   mn = new menu();
   
-  /*
+  
   act = this.getActivity();
   cnt = act.getApplicationContext();
   sp = PreferenceManager.getDefaultSharedPreferences(cnt);
@@ -65,7 +64,7 @@ public void setup() {
 
   unlockedLvlFile = "unlockedLvl";
   unlockedLvl = load(unlockedLvlFile);
-  */
+  
 }
 
 public void draw() {
@@ -79,7 +78,7 @@ public void draw() {
   }
 }
 
-/*
+
 void save(int value, String name) {
   //editor.clear();
   editor.putInt(name, value);
@@ -89,7 +88,7 @@ void save(int value, String name) {
 int load(String name) {
   return sp.getInt(name, 0);
 }
-*/
+
 class bounce{
   float x,y;
   public float r;
@@ -206,10 +205,27 @@ class game {
     levels.add(new level(new float[][]{{0, width*0, height*0.38f, width*0.6f, height*0.04f}, {0, width*0.4f, height*0.18f, width*0.6f, height*0.04f}, {0, width*0.4f, height*0.58f, width*0.6f, height*0.04f}}));
     levels.add(new level(new float[][]{{0, width*0, height*0.5f, width*0.7f, height*0.04f}, {0, width*0.3f, height*0.2f, width*0.7f, height*0.04f}, {0, width*0.3f, height*0.2f, height*0.04f, height*0.15f}, {0, width*0.7f-height*0.04f, height*0.39f, height*0.04f, height*0.15f}}));
     levels.add(new level(new float[][]{{0, width*0, height*0.38f, width*0.5f, height*0.04f}, {1, width*0.5f, height*0.18f, width*0.5f, height*0.04f}}));
-    levels.add(new level(new float[][]{{1, width*0.5f-height*0.02f, height*0.25f, height*0.04f, height*0.2f}, {1, width*0.5f-height*0.02f, height*0.55f, height*0.04f, height*0.2f}, {0, 0, height*0.71f, width*0.5f+height*0.02f, height*0.04f}, {0, width*0.5f-height*0.02f, height*0.25f, width*0.5f+height*0.02f, height*0.04f}}));
+    levels.add(new level(new float[][]{{1, width*0.5f-height*0.02f, height*0.25f, height*0.04f, height*0.15f}, {1, width*0.5f-height*0.02f, height*0.6f, height*0.04f, height*0.15f}, {0, 0, height*0.71f, width*0.5f+height*0.02f, height*0.04f}, {0, width*0.5f-height*0.02f, height*0.25f, width*0.5f+height*0.02f, height*0.04f}}));
     levels.add(new level(new float[][]{{0, width*0, height*0.3f, width*0.2f, height*0.04f}, {0, width*0.4f, height*0.3f, width*0.6f, height*0.04f}, {0, 0, height*0.6f, width*0.6f, height*0.04f}, {0, width*0.8f, height*0.6f, width*0.2f, height*0.04f}}));
     levels.add(new level(new float[][]{{0, width*0, height*0.2f, width*0.43f, height*0.04f}, {0, width*0.57f, height*0.2f, width*0.43f, height*0.04f}}));
     levels.add(new level(new float[][]{{0, width*0.48f, height*0.45f, width*0.04f, height*0.05f}, {0, width*0.48f, height*0.6f, width*0.04f, height*0.05f}, {0, width*0.48f, height*0.75f, width*0.04f, height*0.05f}, {1, 0, height*0.42f, width*0.7f, height*0.02f}, {1, width*0.5f, height*0.3f, width*0.5f, height*0.02f}}));
+    levels.add(new level(new float[][]{}));
+    levels.add(new level(new float[][]{}));
+    levels.add(new level(new float[][]{}));
+    levels.add(new level(new float[][]{}));
+    levels.add(new level(new float[][]{}));
+    levels.add(new level(new float[][]{}));
+    levels.add(new level(new float[][]{}));
+    levels.add(new level(new float[][]{}));
+    levels.add(new level(new float[][]{}));
+    levels.add(new level(new float[][]{}));
+    levels.add(new level(new float[][]{}));
+    levels.add(new level(new float[][]{}));
+    levels.add(new level(new float[][]{}));
+    levels.add(new level(new float[][]{}));
+    levels.add(new level(new float[][]{}));
+    levels.add(new level(new float[][]{}));
+    levels.add(new level(new float[][]{}));
     levels.add(new level(new float[][]{}));
   }
 
@@ -226,6 +242,7 @@ class game {
       level level = levels.get(lvl-1);
       level.reset();
     }else{
+      mn.y = 0;
       page = 0;
     }
   }
@@ -287,6 +304,7 @@ class level {
       reset();
     }
     if (back_btn.pressed()) {
+      mn.y = 0;
       page = 0;
       reset();
     }
@@ -344,7 +362,7 @@ class level {
       reset();
       gm.lvl++;
       unlockedLvl ++;
-      //save(unlockedLvl,unlockedLvlFile);
+      save(unlockedLvl,unlockedLvlFile);
       gm.reset();
     }
 
@@ -477,11 +495,14 @@ class menu {
   button darkmode_btn;
   button music_btn;
 
+  int y, ys;
+  int Mstatus;
+
   ArrayList<button> buttons = new ArrayList<button>();
 
   menu() {
 
-
+    y = 0;
 
     darkmode_btn = new button(PApplet.parseInt(width*0.9f), PApplet.parseInt(height*0.05f), 4, PApplet.parseInt(width*0.03f), color(0), color(255), color(255));
     music_btn = new button(PApplet.parseInt(width*0.1f), PApplet.parseInt(height*0.05f), 31, PApplet.parseInt(width*0.03f), color(green), color(green), color(red));
@@ -503,12 +524,9 @@ class menu {
 
     noStroke();
 
-    fill(66, 170, 245);
-    rect(0, 0, width, height/10);   //tob bar
-
-
-    music_btn.run();
-    darkmode_btn.run();
+    
+    
+    
 
 
     for (int i = 0; i < buttons.size(); i++) {
@@ -518,14 +536,14 @@ class menu {
       } else {
         buttons.get(i).locked = false;
       }
-      if (buttons.get(i).pressed() && buttons.get(i).locked == false ) {
+      if (buttons.get(i).pressed() && buttons.get(i).locked == false && Mstatus == 0) {
         gm.lvl = i+1;
         gm.reset();
         page = 1;
       }
     }
 
-    if (darkmode_btn.pressed()) {
+    if (darkmode_btn.pressed() && Mstatus == 0) {
 
       if (darkmode_btn.click == 0) {
         darkmode_btn.click = 1;
@@ -538,8 +556,8 @@ class menu {
     } else {
       darkmode_btn.click = 0;
     }
-    
-    
+
+
     if (music_btn.pressed()) {
 
       if (music_btn.click == 0) {
@@ -555,6 +573,39 @@ class menu {
     } else {
       music_btn.click = 0;
     }
+    
+    fill(66, 170, 245);
+    rect(0, 0, width, height/10);   //tob bar
+
+
+    music_btn.run();
+    darkmode_btn.run();
+
+
+
+    for ( int i = 0; i < gm.levels.size(); i++) {
+      buttons.get(i).y = PApplet.parseInt((i - i%3) / 3 * width/4 + height*0.2f + y);
+    }
+    
+    
+    int l = ((gm.levels.size()-1)-(gm.levels.size()-1)%3) /3;
+    println(l);
+
+    if (mousePressed && mouseY > height*0.1f) {
+
+      if (Mstatus == 0) {
+        Mstatus = 1;
+        ys = mouseY-y;
+      } else {
+
+        y = mouseY - ys;
+        if(y > 0) y = 0;
+        if(y < -1 * l * width/4 + height*0.8f - width/4) y = PApplet.parseInt(-1 * l * width/4 + height*0.8f - width/4);
+        
+      }
+    } else {
+      Mstatus = 0;
+    }
   }
 }
 class Rectangle {
@@ -568,15 +619,5 @@ class Rectangle {
     this.y = y;
     this.rectWidth = rectWidth;
     this.rectHeight = rectHeight;
-  }
-}
-  public void settings() {  size(400, 800); }
-  static public void main(String[] passedArgs) {
-    String[] appletArgs = new String[] { "bounz_4" };
-    if (passedArgs != null) {
-      PApplet.main(concat(appletArgs, passedArgs));
-    } else {
-      PApplet.main(appletArgs);
-    }
   }
 }
