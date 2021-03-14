@@ -1,14 +1,9 @@
-
+package processing.test.bounz_4;
 
 import processing.core.*; 
 import processing.data.*; 
 import processing.event.*; 
 import processing.opengl.*; 
-
-import android.content.SharedPreferences; 
-import android.preference.PreferenceManager; 
-import android.content.Context; 
-import android.app.Activity; 
 
 import java.util.HashMap; 
 import java.util.ArrayList; 
@@ -20,16 +15,16 @@ import java.io.OutputStream;
 import java.io.IOException; 
 
 
-
-
-
-
-
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
+import android.content.Context;
+import android.app.Activity;
 
 Activity act;
 Context cnt;
 SharedPreferences sp;
 SharedPreferences.Editor editor;
+
 
 
 //game
@@ -41,7 +36,7 @@ boolean darkmode = true;
 
 //app data
 int page = 0;   //0 = menu ; 1 = game
-int unlockedLvl;
+int unlockedLvl = 0;
 String unlockedLvlFile;
 
 
@@ -59,7 +54,8 @@ public void setup() {
 
   gm = new game(5);
   mn = new menu();
-
+  
+  
   act = this.getActivity();
   cnt = act.getApplicationContext();
   sp = PreferenceManager.getDefaultSharedPreferences(cnt);
@@ -67,6 +63,7 @@ public void setup() {
 
   unlockedLvlFile = "unlockedLvl";
   unlockedLvl = load(unlockedLvlFile);
+  
 }
 
 public void draw() {
@@ -80,15 +77,17 @@ public void draw() {
   }
 }
 
-public void save(int value, String name) {
+
+void save(int value, String name) {
   //editor.clear();
   editor.putInt(name, value);
   editor.commit();
 }
 
-public int load(String name) {
+int load(String name) {
   return sp.getInt(name, 0);
 }
+
 class bounce{
   float x,y;
   public float r;
@@ -113,16 +112,20 @@ class button {
   int x, y;
   int r ;
   int click = 0;
-  int dc,lc;
+  int dc,lc,loc;
   String txt = "";
+  
+  boolean locked;
+  
 
-  public button(int x, int y, int mode, int r , int dc , int lc) {
+  public button(int x, int y, int mode, int r , int dc , int lc , int loc) {
     this.x = x;
     this.y = y;
     this.mode = mode;
     this.r = r;
     this.dc = dc;
     this.lc = lc;
+    this.loc = loc;
   }
   
   public void addTxt(String txt){
@@ -135,6 +138,10 @@ class button {
       c = dc;
     } else {
       c = lc;
+    }
+    
+    if(locked){
+      c = loc;
     }
     if (mode == 3) {
       fill(c, 60);
@@ -166,7 +173,7 @@ class button {
   }
 
   public boolean pressed() {
-    if (dist(x, y, mouseX, mouseY) <= 1.5f*r && mousePressed) {
+    if (dist(x, y, mouseX, mouseY) <= 1.5f*r && mousePressed && !locked) {
       return true;
     }
     return false;
@@ -258,8 +265,8 @@ class level {
     reset();   //resets level
 
 
-    back_btn = new button(PApplet.parseInt(width*0.1f), PApplet.parseInt(height*0.05f), 3, PApplet.parseInt(width*0.03f),color(0),color(255));
-    restart_btn = new button(PApplet.parseInt(width*0.9f), PApplet.parseInt(height*0.05f), 0, PApplet.parseInt(width*0.03f),color(0),color(255));
+    back_btn = new button(PApplet.parseInt(width*0.1f), PApplet.parseInt(height*0.05f), 3, PApplet.parseInt(width*0.03f),color(0),color(255),color(0));
+    restart_btn = new button(PApplet.parseInt(width*0.9f), PApplet.parseInt(height*0.05f), 0, PApplet.parseInt(width*0.03f),color(0),color(255),color(0));
   }
 
   /*
@@ -328,6 +335,8 @@ class level {
     if (by < br + height/10 ) {   //if buttom is at top screen
       reset();
       gm.lvl++;
+      unlockedLvl ++;
+      save(unlockedLvl,unlockedLvlFile);
       gm.reset();
     }
 
@@ -465,10 +474,10 @@ class menu {
 
 
     
-    darkmode_btn = new button(PApplet.parseInt(width*0.9f), PApplet.parseInt(height*0.05f), 4, PApplet.parseInt(width*0.03f), color(0),color(255));
+    darkmode_btn = new button(PApplet.parseInt(width*0.9f), PApplet.parseInt(height*0.05f), 4, PApplet.parseInt(width*0.03f), color(0),color(255),color(255));
 
     for ( int i = 0; i < gm.levels.size(); i++) {
-      buttons.add(new button(i % 3 * width/4 + ( width/2 - width/4), PApplet.parseInt((i - i%3) / 3 * width/4 + height*0.2f), 0, width/13, color(green),color(green)));
+      buttons.add(new button(i % 3 * width/4 + ( width/2 - width/4), PApplet.parseInt((i - i%3) / 3 * width/4 + height*0.2f), 0, width/13, color(green),color(green),color(red)));
       buttons.get(i).addTxt(str(i+1));
     }
   }
@@ -491,6 +500,11 @@ class menu {
 
     for (int i = 0; i < buttons.size(); i++) {
       buttons.get(i).run();
+      if(unlockedLvl < i){
+        buttons.get(i).locked = true;
+      }else{
+        buttons.get(i).locked = false;
+      }
       if (buttons.get(i).pressed() ) {
         gm.lvl = i+1;
         gm.reset();
