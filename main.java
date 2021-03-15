@@ -12,7 +12,7 @@ import java.io.InputStream;
 import java.io.OutputStream; 
 import java.io.IOException; 
 
-public class bounz_5 extends PApplet {
+
 
 
 import android.content.SharedPreferences;
@@ -46,13 +46,14 @@ String unlockedLvlFile;
 int blue = color(66, 170, 245);
 int green = color(133, 255, 171);
 int red = color(255, 115, 129);
+int yellow = color(242, 247, 96);
 
 
 public void setup() {
 
   
   background(255);
-  orientation(PORTRAIT);  
+  //orientation(PORTRAIT);  
 
 
   gm = new game(5);
@@ -201,6 +202,19 @@ class button {
     return false;
   }
 }
+class Ellipse {
+  float x;
+  float y;
+  float ellipseWidth;
+  float ellipseHeight;
+
+  public Ellipse(float x, float y, float ellipseWidth, float ellipseHeight) {
+    this.x = x;
+    this.y = y;
+    this.ellipseWidth = ellipseWidth;
+    this.ellipseHeight = ellipseHeight;
+  }
+}
 class game {
   public int lvl;
 
@@ -214,16 +228,18 @@ class game {
      *   height*0.04
      *
      */
+    levels.add(new level(new float[][]{{0,0,height*0.5f,width*0.6f,height*0.04f}}));
+    levels.add(new level(new float[][]{{0,0,height*0.4f,width*0.6f,height*0.04f},{0,width*0.4f,height*0.6f,width*0.6f,height*0.04f}}));
+    levels.add(new level(new float[][]{{0,0,height*0.3f,width*0.6f,height*0.04f},{0,width*0.4f,height*0.5f,width*0.6f,height*0.04f},{0,0,height*0.7f,width*0.6f,height*0.04f}}));
+    levels.add(new level(new float[][]{{1,0,height*0.3f,width*0.6f,height*0.04f},{0,width*0.4f,height*0.6f,width*0.6f,height*0.04f}}));
+    levels.add(new level(new float[][]{{2,width*0.2f,height*0.7f,height*0.04f,height*0.04f},{2,width*0.8f,height*0.4f,height*0.04f,height*0.04f},{1,0,height*0.5f,width,height*0.04f}}));
     levels.add(new level(new float[][]{}));
-    levels.add(new level(new float[][]{{0, width*0, height*0.38f, width*0.6f, height*0.04f}}));
-    levels.add(new level(new float[][]{{0, width*0, height*0.38f, width*0.6f, height*0.04f}, {0, width*0.4f, height*0.18f, width*0.6f, height*0.04f}}));
-    levels.add(new level(new float[][]{{0, width*0, height*0.38f, width*0.6f, height*0.04f}, {0, width*0.4f, height*0.18f, width*0.6f, height*0.04f}, {0, width*0.4f, height*0.58f, width*0.6f, height*0.04f}}));
-    levels.add(new level(new float[][]{{0, width*0, height*0.5f, width*0.7f, height*0.04f}, {0, width*0.3f, height*0.2f, width*0.7f, height*0.04f}, {0, width*0.3f, height*0.2f, height*0.04f, height*0.15f}, {0, width*0.7f-height*0.04f, height*0.39f, height*0.04f, height*0.15f}}));
-    levels.add(new level(new float[][]{{0, width*0, height*0.38f, width*0.5f, height*0.04f}, {1, width*0.5f, height*0.18f, width*0.5f, height*0.04f}}));
-    levels.add(new level(new float[][]{{1, width*0.5f-height*0.02f, height*0.25f, height*0.04f, height*0.15f}, {1, width*0.5f-height*0.02f, height*0.6f, height*0.04f, height*0.15f}, {0, 0, height*0.71f, width*0.5f+height*0.02f, height*0.04f}, {0, width*0.5f-height*0.02f, height*0.25f, width*0.5f+height*0.02f, height*0.04f}}));
-    levels.add(new level(new float[][]{{0, width*0, height*0.3f, width*0.2f, height*0.04f}, {0, width*0.4f, height*0.3f, width*0.6f, height*0.04f}, {0, 0, height*0.6f, width*0.6f, height*0.04f}, {0, width*0.8f, height*0.6f, width*0.2f, height*0.04f}}));
-    levels.add(new level(new float[][]{{0, width*0, height*0.2f, width*0.43f, height*0.04f}, {0, width*0.57f, height*0.2f, width*0.43f, height*0.04f}}));
-    levels.add(new level(new float[][]{{0, width*0.48f, height*0.45f, width*0.04f, height*0.05f}, {0, width*0.48f, height*0.6f, width*0.04f, height*0.05f}, {0, width*0.48f, height*0.75f, width*0.04f, height*0.05f}, {1, 0, height*0.42f, width*0.7f, height*0.02f}, {1, width*0.5f, height*0.3f, width*0.5f, height*0.02f}}));
+    levels.add(new level(new float[][]{}));
+    levels.add(new level(new float[][]{}));
+    levels.add(new level(new float[][]{}));
+    levels.add(new level(new float[][]{}));
+    levels.add(new level(new float[][]{}));
+    levels.add(new level(new float[][]{}));
     levels.add(new level(new float[][]{}));
     levels.add(new level(new float[][]{}));
     levels.add(new level(new float[][]{}));
@@ -256,7 +272,7 @@ class game {
     if (lvl <= levels.size()) {
       level level = levels.get(lvl-1);
       level.reset();
-    }else{
+    } else {
       mn.y = 0;
       page = 0;
     }
@@ -294,7 +310,7 @@ class help {
 
         y = mouseY - ys;
         if (y > 0) y = 0;
-        if(y < -1* width*2.6f + height*0.8f) y = PApplet.parseInt(-1* width*2.6f+ height*0.8f);
+        if(y < -1* width*2.5f + height*0.8f) y = PApplet.parseInt(-1* width*2.5f+ height*0.8f);
       }
     } else {
       Mstatus = 0;
@@ -323,6 +339,7 @@ class help {
     textAlign(CENTER);
 
     text("made by Felix", width*0.1f, width*2.4f+y, width*0.8f, height);
+    textSize(width*0.035f);
     text("https://github.com/Felixpointexe/bounz", width*0.1f, width*2.5f+y, width*0.8f, height);
 
 
@@ -364,6 +381,7 @@ class level {
 
   ArrayList<Rectangle> Grectangles = new ArrayList<Rectangle>();   //list of all "good" rectangles
   ArrayList<Rectangle> Rrectangles = new ArrayList<Rectangle>();   //list of all "bad" rectangles
+  ArrayList<portal> portales = new ArrayList<portal>();   //list of all "to portal" rectangles
   ArrayList<bounce> bounces = new ArrayList<bounce>();
 
   /*
@@ -379,13 +397,16 @@ class level {
       if (data[i][0] == 1) {   //if 2nd parameter is 1 = "bad" rectangle
         Rrectangles.add(new Rectangle(data[i][1], data[i][2], data[i][3], data[i][4]));
       }
+      if (data[i][0] == 2 ) {
+        portales.add(new portal(data[i][1], data[i][2], data[i][3], data[i][4]));
+      }
     }
 
     reset();   //resets level
 
 
-    back_btn = new button(PApplet.parseInt(width*0.1f), PApplet.parseInt(height*0.05f), 3, PApplet.parseInt(width*0.03f),color(0),color(255),color(0));
-    restart_btn = new button(PApplet.parseInt(width*0.9f), PApplet.parseInt(height*0.05f), 0, PApplet.parseInt(width*0.03f),color(0),color(255),color(0));
+    back_btn = new button(PApplet.parseInt(width*0.1f), PApplet.parseInt(height*0.05f), 3, PApplet.parseInt(width*0.03f), color(0), color(255), color(0));
+    restart_btn = new button(PApplet.parseInt(width*0.9f), PApplet.parseInt(height*0.05f), 0, PApplet.parseInt(width*0.03f), color(0), color(255), color(0));
   }
 
   /*
@@ -490,7 +511,7 @@ class level {
 
       fill(blue);
       rect(rectangle.x, rectangle.y, rectangle.rectWidth, rectangle.rectHeight, 80);
-      fill(blue , 60);
+      fill(blue, 60);
       rect(rectangle.x-width/20, rectangle.y-width/20, rectangle.rectWidth+width/10, rectangle.rectHeight+width/10, 80);
     }
 
@@ -524,6 +545,37 @@ class level {
       fill(red, 60);
       rect(rectangle.x-width/20, rectangle.y-width/20, rectangle.rectWidth+width/10, rectangle.rectHeight+width/10, 80);
     }
+
+    for (int i = 0; i < portales.size(); i++) {   
+
+      portal portal = portales.get(i);
+
+      noStroke();
+      
+      if(dist(portal.x,portal.y,bx,by) < portal.portalWidth + br){
+        if(portal.locked == false){
+          if(portales.size() > 1){
+            int r = i;
+            while(i == r){
+              r = PApplet.parseInt(random(0,portales.size()));
+            }
+            portales.get(r).locked = true;
+            bx = portales.get(r).x;
+            by = portales.get(r).y;
+          }
+        }
+      }else{
+        portales.get(i).locked = false;
+      }
+
+
+      fill(yellow);
+      ellipse(portal.x, portal.y, portal.portalWidth, portal.portalHeight);
+      fill(yellow, 60);
+      ellipse(portal.x, portal.y, portal.portalWidth+width/10, portal.portalHeight+width/10);
+    }
+    
+    
 
     for (int i = 0; i < bounces.size(); i++) {
       if ( bounces.get(i).r < width/2) {
@@ -709,7 +761,22 @@ class menu {
     }
   }
 }
+class portal{
+  float x;
+  float y;
+  float portalWidth;
+  float portalHeight;
+  
+  boolean locked = false;
 
+  public portal(float x, float y, float portalWidth, float portalHeight) {
+    this.x = x;
+    this.y = y;
+    this.portalWidth = portalWidth;
+    this.portalHeight = portalHeight;
+  }
+  
+}
 class Rectangle {
   float x;
   float y;
