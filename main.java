@@ -38,7 +38,7 @@ boolean music =true;
 
 //app data
 int page = 0;   //0 = menu ; 1 = game
-int unlockedLvl = 10;
+int unlockedLvl = 50;
 String unlockedLvlFile;
 float g = 0.1f;
 
@@ -403,6 +403,7 @@ class game {
     //adds lvls
     /*
      *   height*0.04
+     *   0 = blue ; 1 = red ; 2 = portal ; 3 = tornado ; 4 = hill
      *
      */
     levels.add(new level(new float[][]{{0,0,height*0.5f,width*0.6f,height*0.04f}}));
@@ -411,12 +412,12 @@ class game {
     levels.add(new level(new float[][]{{1,0,height*0.3f,width*0.6f,height*0.04f},{0,width*0.4f,height*0.6f,width*0.6f,height*0.04f}}));
     levels.add(new level(new float[][]{{2,width*0.2f,height*0.7f,height*0.04f,height*0.04f},{2,width*0.8f,height*0.4f,height*0.04f,height*0.04f},{1,0,height*0.5f,width,height*0.04f}}));
     levels.add(new level(new float[][]{{2,width*0.2f,height*0.7f,height*0.04f,height*0.04f},{2,width*0.8f,height*0.4f,height*0.04f,height*0.04f},{1,width*0.5f,height*0.25f,width*0.5f,height*0.04f},{1,0,height*0.5f,width*0.75f,height*0.04f}}));
-    levels.add(new level(new float[][]{}));
-    levels.add(new level(new float[][]{}));
-    levels.add(new level(new float[][]{}));
-    levels.add(new level(new float[][]{}));
-    levels.add(new level(new float[][]{}));
-    levels.add(new level(new float[][]{}));
+    levels.add(new level(new float[][]{{1,0,height*0.4f,width*0.1f,height*0.04f},{1,width*0.4f,height*0.4f,width*0.6f,height*0.04f},{3,width*0.4f,height*0.42f,width*0.6f,width*0.6f}}));
+    levels.add(new level(new float[][]{{0,0,height*0.58f,width*0.5f,height*0.04f},{4,width,height*0.6f,width*0.5f,width*0.5f},{1,width*0.5f,height*0.58f-width*0.35f,width*0.5f,height*0.04f},{4,0,height*0.6f-width*0.35f,width*0.5f,width*0.5f}}));
+    levels.add(new level(new float[][]{{0,width*0.5f-height*0.02f,height*0.3f,height*0.04f,height*0.4f},{0,0,height*0.3f,width*0.5f+height*0.02f,height*0.04f},{0,0,height*0.66f,width*0.5f+height*0.02f,height*0.04f},{2,width*0.75f,height*0.45f,height*0.04f,height*0.04f},{2,width*0.25f,height*0.45f,height*0.04f,height*0.04f},{1,width*0.5f,height*0.66f,width*0.2f,height*0.04f}}));
+    levels.add(new level(new float[][]{{0,width*0.2f,height*0.55f,height*0.04f,height*0.25f},{0,width*0.2f,height*0.2f,height*0.04f,height*0.25f},{3,width*0.2f+height*0.04f,height*0.35f,height*0.3f,height*0.3f},{1,width*0.2f+height*0.04f,height*0.55f,width*0.8f-height*0.04f,height*0.04f}}));
+    levels.add(new level(new float[][]{{0,width*0.35f,height*0.3f,width*0.65f,height*0.04f},{4,width,height*0.5f,height*0.2f,height*0.2f},{4,height*0.1f,height*0.6f,height*0.2f,height*0.2f},{1,width-height*0.04f,height*0.7f,height*0.04f,height*0.3f}}));
+    levels.add(new level(new float[][]{{1,0,height*0.4f,width,height*0.04f},{2,width*0.5f,height*0.49f,height*0.04f,height*0.04f},{2,width*0.5f,height*0.35f,height*0.04f,height*0.04f},{0,width*0.5f,height*0.8f,width*0.5f,height*0.04f},{0,0,height*0.67f,width*0.5f,height*0.04f},{0,width*0.5f,height*0.54f,width*0.5f,height*0.04f},{0,0,height*0.25f,width*0.5f,height*0.04f},{0,width*0.5f,height*0.12f,width*0.5f,height*0.04f}}));
     levels.add(new level(new float[][]{{3,width*0.3f,height*0.7f,width*0.5f,width*0.5f},{3,width*0.7f,height*0.3f,width*0.5f,width*0.5f}}));
     levels.add(new level(new float[][]{{4,width*0.3f,height*0.7f,width*0.5f,width*0.5f},{4,width*0.7f,height*0.3f,width*0.5f,width*0.5f}}));
     levels.add(new level(new float[][]{}));
@@ -711,6 +712,24 @@ class level {
 
 
     noStroke();
+    
+    for (int i = 0; i < tornados.size(); i++) {  
+      for (int j = 0; j < tornados.get(i).tornadoWidth; j += tornados.get(i).tornadoWidth / 10) {
+        fill(purple,80);
+        ellipse(tornados.get(i).x, tornados.get(i).y, j, j);
+      }
+      fill(purple, 60);
+      ellipse(tornados.get(i).x, tornados.get(i).y, tornados.get(i).tornadoWidth+width/10, tornados.get(i).tornadoHeight+width/10);
+    }
+    
+    for (int i = 0; i < hills.size(); i++) {  
+      for (int j = 0; j < hills.get(i).tornadoWidth; j += hills.get(i).tornadoWidth / 10) {
+        fill(pink,80);
+        ellipse(hills.get(i).x, hills.get(i).y, j, j);
+      }
+      fill(pink, 60);
+      ellipse(hills.get(i).x, hills.get(i).y, hills.get(i).tornadoWidth+width/10, hills.get(i).tornadoHeight+width/10);
+    }
 
     for (int i = 0; i < Grectangles.size(); i++) {   //all "good" rectangles
       fill(blue);
@@ -733,23 +752,7 @@ class level {
       ellipse(portales.get(i).x, portales.get(i).y, portales.get(i).portalWidth+width/10, portales.get(i).portalHeight+width/10);
     }
 
-    for (int i = 0; i < tornados.size(); i++) {  
-      for (int j = 0; j < tornados.get(i).tornadoWidth; j += tornados.get(i).tornadoWidth / 10) {
-        fill(purple,80);
-        ellipse(tornados.get(i).x, tornados.get(i).y, j, j);
-      }
-      fill(purple, 60);
-      ellipse(tornados.get(i).x, tornados.get(i).y, tornados.get(i).tornadoWidth+width/10, tornados.get(i).tornadoHeight+width/10);
-    }
     
-    for (int i = 0; i < hills.size(); i++) {  
-      for (int j = 0; j < hills.get(i).tornadoWidth; j += hills.get(i).tornadoWidth / 10) {
-        fill(pink,80);
-        ellipse(hills.get(i).x, hills.get(i).y, j, j);
-      }
-      fill(pink, 60);
-      ellipse(hills.get(i).x, hills.get(i).y, hills.get(i).tornadoWidth+width/10, hills.get(i).tornadoHeight+width/10);
-    }
 
 
 
