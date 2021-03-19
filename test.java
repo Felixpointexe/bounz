@@ -13,17 +13,19 @@ import java.io.OutputStream;
 import java.io.IOException; 
 
 
-
-
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.content.Context;
 import android.app.Activity;
+import android.media.MediaPlayer;
+import android.content.res.AssetFileDescriptor;
 
 Activity act;
 Context cnt;
 SharedPreferences sp;
 SharedPreferences.Editor editor;
+AssetFileDescriptor afd;
+MediaPlayer mp;
 
 
 
@@ -38,8 +40,9 @@ boolean music =true;
 
 //app data
 int page = 0;   //0 = menu ; 1 = game
-int unlockedLvl = 10;
+int unlockedLvl = 50;
 String unlockedLvlFile;
+float g = 0.1f;
 
 
 //colors
@@ -48,6 +51,8 @@ int green = color(133, 255, 171);
 int red = color(255, 115, 129);
 int yellow = color(242, 247, 96);
 int gray = color(138, 138, 138);
+int purple = color(188, 66, 245);
+int pink = color(245, 66, 218);
 
 
 public void setup() {
@@ -66,6 +71,17 @@ public void setup() {
   cnt = act.getApplicationContext();
   sp = PreferenceManager.getDefaultSharedPreferences(cnt);
   editor = sp.edit();
+  
+  try{
+    mp = new MediaPlayer();
+    afd = context.getAssets().openFd("name.mp3");
+    mp.setDataSource(afd.getFileDescriptor());
+    mp.prepare();
+  }
+  catch(IOException e){
+    println("file did not load");
+  }
+  mp.start;
 
   unlockedLvlFile = "unlockedLvl";
   unlockedLvl = load(unlockedLvlFile);
@@ -207,42 +223,46 @@ class ball {
         gm.levels.get(gm.lvl-1).portales.get(i).locked = false;
       }
     }
+    
     for (int i = 0; i < gm.levels.get(gm.lvl-1).tornados.size(); i++) {   
 
       tornado tornado = gm.levels.get(gm.lvl-1).tornados.get(i);
 
-      float toM = (atan2(tornado.y-y, tornado.x-x) + TWO_PI ) % TWO_PI;
-      float dir = ((TWO_PI-a) + TWO_PI ) % TWO_PI;
-
-      stroke(0);
-      line(width/2, height/2, width/2 + cos(toM)*100, height/2 + sin(toM)*100);
-      line(width/2, height/2, width/2 + cos(dir)*100, height/2 + sin(dir)*100);
-
-      println(dir);
-
-      if (toM-dir < PI) {
-        line(width/2, height/2, width/2 + cos((toM-dir)*0.5f + dir)*100, height/2 + sin(((toM-dir))*0.5f + dir)*100);
-      } else {
-        line(width/2, height/2, width/2 + cos(dir- (PI-(toM-dir)*0.5f ))*100, height/2 + sin(dir- (PI-(toM-dir)*0.5f))*100);
-      }
-
-
+      float dirToMiddle = TWO_PI-(atan2(tornado.y-y, tornado.x-x) + TWO_PI ) % TWO_PI;
+      float dirOfMove = a;
 
       noStroke();
 
       if (dist(tornado.x, tornado.y, x, y) < tornado.tornadoWidth/2 + r) {
-        float n = 0.05f * ( dist(tornado.x, tornado.y, x, y) / (tornado.tornadoWidth/2));
 
+        float n = g * ( ((tornado.tornadoWidth/2)-dist(tornado.x, tornado.y, x, y)) / (tornado.tornadoWidth/2));
 
-        if (toM-dir < PI) {
-          dir = (toM-dir)*n+dir;
+        if ((dirToMiddle-dirOfMove+TWO_PI)%TWO_PI < (dirOfMove-dirToMiddle+TWO_PI)%TWO_PI) {
+          a = ((dirToMiddle-dirOfMove+TWO_PI)%TWO_PI)*n+dirOfMove;
         } else {
-          dir = dir - (PI - (toM-dir)*n);
+          a = dirOfMove-((dirOfMove-dirToMiddle+TWO_PI)%TWO_PI)*n;
         }
+      }
+    }
+    
+    for (int i = 0; i < gm.levels.get(gm.lvl-1).hills.size(); i++) {   
 
+      tornado hill = gm.levels.get(gm.lvl-1).hills.get(i);
 
-        a = TWO_PI - dir;
-      } else {
+      float dirToMiddle = TWO_PI-(atan2(hill.y-y, hill.x-x) + TWO_PI ) % TWO_PI;
+      float dirOfMove = a;
+
+      noStroke();
+
+      if (dist(hill.x, hill.y, x, y) < hill.tornadoWidth/2 + r) {
+
+        float n = g * ( ((hill.tornadoWidth/2)-dist(hill.x, hill.y, x, y)) / (hill.tornadoWidth/2));
+
+        if ((dirToMiddle-dirOfMove+TWO_PI)%TWO_PI > (dirOfMove-dirToMiddle+TWO_PI)%TWO_PI) {
+          a = ((dirToMiddle-dirOfMove+TWO_PI)%TWO_PI)*n+dirOfMove;
+        } else {
+          a = dirOfMove-((dirOfMove-dirToMiddle+TWO_PI)%TWO_PI)*n;
+        }
       }
     }
 
@@ -265,7 +285,6 @@ class ball {
     y += vy;   //calculates new ball y
   }
 }
-
 class bounce{
   float x,y;
   public float r;
@@ -311,6 +330,7 @@ class button {
   }
 
   public void run() {
+    noStroke();
     int c;
     if (darkmode) {
       c = dc;
@@ -395,6 +415,7 @@ class game {
     //adds lvls
     /*
      *   height*0.04
+     *   0 = blue ; 1 = red ; 2 = portal ; 3 = tornado ; 4 = hill
      *
      */
     levels.add(new level(new float[][]{{0,0,height*0.5f,width*0.6f,height*0.04f}}));
@@ -402,7 +423,19 @@ class game {
     levels.add(new level(new float[][]{{0,0,height*0.3f,width*0.6f,height*0.04f},{0,width*0.4f,height*0.5f,width*0.6f,height*0.04f},{0,0,height*0.7f,width*0.6f,height*0.04f}}));
     levels.add(new level(new float[][]{{1,0,height*0.3f,width*0.6f,height*0.04f},{0,width*0.4f,height*0.6f,width*0.6f,height*0.04f}}));
     levels.add(new level(new float[][]{{2,width*0.2f,height*0.7f,height*0.04f,height*0.04f},{2,width*0.8f,height*0.4f,height*0.04f,height*0.04f},{1,0,height*0.5f,width,height*0.04f}}));
-    levels.add(new level(new float[][]{{3,width*0.9f,height*0.55f,width/2,width/2}}));
+    levels.add(new level(new float[][]{{2,width*0.2f,height*0.7f,height*0.04f,height*0.04f},{2,width*0.8f,height*0.4f,height*0.04f,height*0.04f},{1,width*0.5f,height*0.25f,width*0.5f,height*0.04f},{1,0,height*0.5f,width*0.75f,height*0.04f}}));
+    levels.add(new level(new float[][]{{1,0,height*0.4f,width*0.1f,height*0.04f},{1,width*0.4f,height*0.4f,width*0.6f,height*0.04f},{3,width*0.4f,height*0.42f,width*0.6f,width*0.6f}}));
+    levels.add(new level(new float[][]{{0,0,height*0.58f,width*0.5f,height*0.04f},{4,width,height*0.6f,width*0.5f,width*0.5f},{1,width*0.5f,height*0.58f-width*0.35f,width*0.5f,height*0.04f},{4,0,height*0.6f-width*0.35f,width*0.5f,width*0.5f}}));
+    levels.add(new level(new float[][]{{0,width*0.5f-height*0.02f,height*0.3f,height*0.04f,height*0.4f},{0,0,height*0.3f,width*0.5f+height*0.02f,height*0.04f},{0,0,height*0.66f,width*0.5f+height*0.02f,height*0.04f},{2,width*0.75f,height*0.45f,height*0.04f,height*0.04f},{2,width*0.25f,height*0.45f,height*0.04f,height*0.04f},{1,width*0.5f,height*0.66f,width*0.2f,height*0.04f}}));
+    levels.add(new level(new float[][]{{0,width*0.2f,height*0.55f,height*0.04f,height*0.25f},{0,width*0.2f,height*0.2f,height*0.04f,height*0.25f},{3,width*0.2f+height*0.04f,height*0.35f,height*0.3f,height*0.3f},{1,width*0.2f+height*0.04f,height*0.55f,width*0.8f-height*0.04f,height*0.04f}}));
+    levels.add(new level(new float[][]{{0,width*0.35f,height*0.3f,width*0.65f,height*0.04f},{4,width,height*0.5f,height*0.2f,height*0.2f},{4,height*0.1f,height*0.6f,height*0.2f,height*0.2f},{1,width-height*0.04f,height*0.7f,height*0.04f,height*0.3f}}));
+    levels.add(new level(new float[][]{{1,0,height*0.4f,width,height*0.04f},{2,width*0.5f,height*0.49f,height*0.04f,height*0.04f},{2,width*0.5f,height*0.35f,height*0.04f,height*0.04f},{0,width*0.5f,height*0.8f,width*0.5f,height*0.04f},{0,0,height*0.67f,width*0.5f,height*0.04f},{0,width*0.5f,height*0.54f,width*0.5f,height*0.04f},{0,0,height*0.25f,width*0.5f,height*0.04f},{0,width*0.5f,height*0.12f,width*0.5f,height*0.04f}}));
+    levels.add(new level(new float[][]{{3,width*0.7f,height*0.75f,width*0.5f,width*0.5f},{3,width*0.3f,height*0.55f,width*0.5f,width*0.5f},{3,width*0.7f,height*0.35f,width*0.5f,width*0.5f},{1,width*0.5f,height*0.55f,width*0.5f,height*0.04f},{1,0,height*0.73f,width*0.5f,height*0.04f},{0,0,height*0.33f,width*0.5f,height*0.04f},{0,width*0.5f,height*0.51f,width*0.5f,height*0.04f}}));
+    levels.add(new level(new float[][]{{4,width*0.3f,height*0.7f,width*0.5f,width*0.5f},{4,width*0.7f,height*0.3f,width*0.5f,width*0.5f}}));
+    levels.add(new level(new float[][]{{2,width*0.1f,height*0.5f,height*0.04f,height*0.04f},{2,width*0.9f,height*0.5f,height*0.04f,height*0.04f},{0,0,height*0.4f,width*0.9f,height*0.04f},{0,width*0.5f-height*0.04f,height*0.4f,height*0.04f,height*0.3f}}));
+    levels.add(new level(new float[][]{{1,0,height*0.1f,height*0.04f,height*0.4f},{1,0,height*0.6f,height*0.04f,height*0.3f},{1,width-height*0.04f,height*0.4f,height*0.04f,height*0.3f},{0,width*0.5f,height*0.53f,width*0.5f,height*0.04f},{0,0,height*0.33f,width*0.5f,height*0.04f}}));
+    levels.add(new level(new float[][]{{3,width*0.75f,height*0.5f,width*0.5f,width*0.5f},{2,width*0.9f,height*0.3f,width*0.1f,width*0.1f},{2,width*0.1f,height*0.3f,width*0.1f,width*0.1f},{1,width*0.5f,height*0.28f,width*0.3f,height*0.04f},{1,width*0.2f,height*0.32f,width*0.3f,height*0.04f},{1,width*0.8f,height*0.24f,width*0.2f,height*0.04f},{1,0,height*0.5f,height*0.04f,height*0.5f}}));
+    levels.add(new level(new float[][]{{0,0,height*0.9f-width*0.143f*0.5f,width/7,width/7},{0,width/7,height*0.9f-width*0.143f*2.5f,width/7,width/7},{0,width/7*2,height*0.9f-width*0.143f*4.5f,width/7,width/7},{0,width/7*3,height*0.9f-width*0.143f*6.5f,width/7,width/7},{0,width/7*4,height*0.9f-width*0.143f*4.5f,width/7,width/7},{0,width/7*5,height*0.9f-width*0.143f*2.5f,width/7,width/7},{0,width-width/7,height*0.9f-width*0.143f*0.5f,width/7,width/7},{1,0,height*0.9f-width*0.143f*6.5f,width/7,width*0.143f*6},{1,width-width/7,height*0.9f-width*0.143f*6.5f,width/7,width*0.143f*6}}));
     levels.add(new level(new float[][]{}));
     levels.add(new level(new float[][]{}));
     levels.add(new level(new float[][]{}));
@@ -415,18 +448,7 @@ class game {
     levels.add(new level(new float[][]{}));
     levels.add(new level(new float[][]{}));
     levels.add(new level(new float[][]{}));
-    levels.add(new level(new float[][]{}));
-    levels.add(new level(new float[][]{}));
-    levels.add(new level(new float[][]{}));
-    levels.add(new level(new float[][]{}));
-    levels.add(new level(new float[][]{}));
-    levels.add(new level(new float[][]{}));
-    levels.add(new level(new float[][]{}));
-    levels.add(new level(new float[][]{}));
-    levels.add(new level(new float[][]{}));
-    levels.add(new level(new float[][]{}));
-    levels.add(new level(new float[][]{}));
-    levels.add(new level(new float[][]{}));
+    
   }
 
   public void run() {
@@ -479,7 +501,7 @@ class help {
 
         y = mouseY - ys;
         if (y > 0) y = 0;
-        if(y < -1* width*2.5f + height*0.8f) y = PApplet.parseInt(-1* width*2.5f+ height*0.8f);
+        if(y < -1* width*2.9f + height*0.8f) y = PApplet.parseInt(-1* width*2.9f+ height*0.8f);
       }
     } else {
       Mstatus = 0;
@@ -494,23 +516,80 @@ class help {
     textAlign(LEFT);
 
     text("The goal is it to shoot the green ball to the top of the sreen by tipping or draging the aming line. When released the ball will shoot automaticly.", width*0.1f, height*0.15f+y, width*0.8f, height);
-    text("blue boxes are 'good' boxes which let the ball bounce. If the ball touches a red box, the level will reset.", width*0.1f, width*0.7f+y, width*0.8f, height);
     
-    stroke (blue);
-    strokeWeight(width/120);
-    line(0,width*1.1f+y , width,width*1.1f+y);
+    fill(blue);
+    rect(width*0.1f,width*0.7f+y,width*0.1f,height*0.04f,30);
+    text("good boxes let the ball bounce", width*0.25f, width*0.7f+y, width*0.7f, height);
     
-    text("Das Ziel ist es den grünen Ball an den oberen Bildschirmrand zu schießen, indem man durch tipen oder ziehen die Ziel-linie bewegt. Wenn man los lässt schießt der Ball automatisch", width*0.1f, width*1.2f+y, width*0.8f, height);
-    text("Blau Boxen sind 'gute' Boxen, welche den Ball abprallen lassen. Wenn der Ball eine rote Box berührt, wird das level zurück gesetzt.", width*0.1f, width*1.7f+y, width*0.8f, height);
+    fill(red);
+    rect(width*0.1f,width*0.9f+y,width*0.1f,height*0.04f,30);
+    text("bad boxes let the ball reset", width*0.25f, width*0.9f+y, width*0.8f, height);
     
-    line(0,width*2.3f+y , width,width*2.3f+y);
+    fill(yellow);
+    ellipse(width*0.15f,width*1.15f+y,width*0.1f,width*0.1f);
+    text("portals let the ball teleport", width*0.25f, width*1.1f+y, width*0.8f, height);
     
+    fill(purple);
+    ellipse(width*0.15f,width*1.35f+y,width*0.1f,width*0.1f);
+    text("tornados will get the ball move in", width*0.25f, width*1.3f+y, width*0.7f, height);
+    
+    fill(pink);
+    ellipse(width*0.15f,width*1.55f+y,width*0.1f,width*0.1f);
+    text("hills will repel the ball", width*0.25f, width*1.5f+y, width*0.7f, height);
+    
+    if (darkmode) {
+      stroke(255);
+    } else {
+      stroke(0);
+    }
+    strokeWeight(height/400);
+    line(0,width*1.7f+y,width,width*1.7f+y);
+    
+    noStroke();
+    button help_back_btn = new button(PApplet.parseInt(width*0.15f),PApplet.parseInt( width*1.9f+y), 3, PApplet.parseInt(width*0.03f), color(255), color(0), color(0));
+    help_back_btn.run();
+    button help_info_btn = new button(PApplet.parseInt(width*0.15f),PApplet.parseInt( width*2.1f+y), 2, PApplet.parseInt(width*0.03f), color(255), color(0), color(0));
+    help_info_btn.run();
+    button help_darkmode_btn = new button(PApplet.parseInt(width*0.15f),PApplet.parseInt( width*2.3f+y), 4, PApplet.parseInt(width*0.03f), color(255), color(0), color(0));
+    help_darkmode_btn.run();
+    button help_music_btn = new button(PApplet.parseInt(width*0.15f),PApplet.parseInt( width*2.5f+y), 31, PApplet.parseInt(width*0.03f), color(255), color(0), color(0));
+    help_music_btn.run();
+    button help_reset_btn = new button(PApplet.parseInt(width*0.15f),PApplet.parseInt( width*2.7f+y), 0, PApplet.parseInt(width*0.03f), color(255), color(0), color(0));
+    help_reset_btn.run();
+    
+    if (darkmode) {
+      fill(255);
+    } else {
+      fill(0);
+    }
+    textSize(width*0.05f);
+    textAlign(LEFT);
+     
+    text("go back to menu", width*0.25f, width*1.86f+y, width*0.7f, height);
+    text("about the game (you are currently here)", width*0.25f, width*2.06f+y, width*0.7f, height);
+    text("toggle darkmode on/off", width*0.25f, width*2.26f+y, width*0.7f, height);
+    text("toggle music on/off", width*0.25f, width*2.46f+y, width*0.7f, height);
+    text("restarts the current level", width*0.25f, width*2.66f+y, width*0.7f, height);
+    
+    if (darkmode) {
+      stroke(255);
+    } else {
+      stroke(0);
+    }
+    strokeWeight(height/400);
+    line(0,width*2.9f+y,width,width*2.9f+y);
+    
+    if (darkmode) {
+      fill(255);
+    } else {
+      fill(0);
+    }
+    textSize(width*0.037f);
     textAlign(CENTER);
 
-    text("made by Felix", width*0.1f, width*2.4f+y, width*0.8f, height);
-    textSize(width*0.035f);
-    text("https://github.com/Felixpointexe/bounz", width*0.1f, width*2.5f+y, width*0.8f, height);
-
+    text("https://github.com/Felixpointexe/bounz/", width*0.1f, width*3+y, width*0.8f, height);
+    
+   
 
     fill(blue);
     noStroke();
@@ -550,7 +629,8 @@ class level {
   ArrayList<Rectangle> Grectangles = new ArrayList<Rectangle>();   //list of all "good" rectangles
   ArrayList<Rectangle> Rrectangles = new ArrayList<Rectangle>();   //list of all "bad" rectangles
   ArrayList<portal> portales = new ArrayList<portal>();   //list of all portales
-  ArrayList<tornado> tornados = new ArrayList<tornado>();   //list of all portales
+  ArrayList<tornado> tornados = new ArrayList<tornado>();   //list of all tornados
+  ArrayList<tornado> hills = new ArrayList<tornado>();   //list of all tornados
   ArrayList<bounce> bounces = new ArrayList<bounce>();
 
   /*
@@ -571,6 +651,9 @@ class level {
       }
       if (data[i][0] == 3 ) {
         tornados.add(new tornado(data[i][1], data[i][2], data[i][3], data[i][4]));
+      }
+      if (data[i][0] == 4 ) {
+        hills.add(new tornado(data[i][1], data[i][2], data[i][3], data[i][4]));
       }
     }
 
@@ -632,7 +715,7 @@ class level {
       if (status == 1) {   //if status is "waiting for player to release mouse"
         status = 2;   //sets status to "waiting for reset()"
 
-        bll.v = width/300;
+        bll.v = width/66;
       }
     }
 
@@ -641,6 +724,24 @@ class level {
 
 
     noStroke();
+    
+    for (int i = 0; i < tornados.size(); i++) {  
+      for (int j = 0; j < tornados.get(i).tornadoWidth; j += tornados.get(i).tornadoWidth / 10) {
+        fill(purple,80);
+        ellipse(tornados.get(i).x, tornados.get(i).y, j, j);
+      }
+      fill(purple, 60);
+      ellipse(tornados.get(i).x, tornados.get(i).y, tornados.get(i).tornadoWidth+width/10, tornados.get(i).tornadoHeight+width/10);
+    }
+    
+    for (int i = 0; i < hills.size(); i++) {  
+      for (int j = 0; j < hills.get(i).tornadoWidth; j += hills.get(i).tornadoWidth / 10) {
+        fill(pink,80);
+        ellipse(hills.get(i).x, hills.get(i).y, j, j);
+      }
+      fill(pink, 60);
+      ellipse(hills.get(i).x, hills.get(i).y, hills.get(i).tornadoWidth+width/10, hills.get(i).tornadoHeight+width/10);
+    }
 
     for (int i = 0; i < Grectangles.size(); i++) {   //all "good" rectangles
       fill(blue);
@@ -663,12 +764,7 @@ class level {
       ellipse(portales.get(i).x, portales.get(i).y, portales.get(i).portalWidth+width/10, portales.get(i).portalHeight+width/10);
     }
 
-    for (int i = 0; i < tornados.size(); i++) {   
-      fill(gray);
-      ellipse(tornados.get(i).x, tornados.get(i).y, tornados.get(i).tornadoWidth, tornados.get(i).tornadoHeight);
-      fill(gray, 60);
-      ellipse(tornados.get(i).x, tornados.get(i).y, tornados.get(i).tornadoWidth+width/10, tornados.get(i).tornadoHeight+width/10);
-    }
+    
 
 
 
@@ -717,12 +813,11 @@ class level {
   public void reset() {
     //background(255);
 
-    bll = new ball(width*0.5f, height*0.9f, 0, 0, width/44,0);
+    bll = new ball(width*0.5f, height*0.9f, 0, 0, width/44, 0);
     status = 0;
     t = 0;
   }
 }
-
 class menu {
 
   button darkmode_btn;
@@ -810,6 +905,7 @@ class menu {
     }
     
     if (help_btn.pressed()) {
+      mp.start;
       page = 2;
     }
     
@@ -890,5 +986,4 @@ class tornado {
     this.tornadoHeight = tornadoHeight;
   }
 }
-
 
