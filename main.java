@@ -12,18 +12,19 @@ import java.io.InputStream;
 import java.io.OutputStream; 
 import java.io.IOException; 
 
-
-
-
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.content.Context;
 import android.app.Activity;
+import android.media.MediaPlayer;
+import android.content.res.AssetFileDescriptor;
 
 Activity act;
 Context cnt;
 SharedPreferences sp;
 SharedPreferences.Editor editor;
+AssetFileDescriptor afd;
+MediaPlayer mp;
 
 
 
@@ -38,7 +39,7 @@ boolean music =true;
 
 //app data
 int page = 0;   //0 = menu ; 1 = game
-int unlockedLvl = 50;
+int unlockedLvl = 0;
 String unlockedLvlFile;
 float g = 0.1f;
 
@@ -51,6 +52,7 @@ int yellow = color(242, 247, 96);
 int gray = color(138, 138, 138);
 int purple = color(188, 66, 245);
 int pink = color(245, 66, 218);
+int orange = color(255, 170, 79);
 
 
 public void setup() {
@@ -69,6 +71,17 @@ public void setup() {
   cnt = act.getApplicationContext();
   sp = PreferenceManager.getDefaultSharedPreferences(cnt);
   editor = sp.edit();
+  
+  try{
+    mp = new MediaPlayer();
+    afd = context.getAssets().openFd("name.mp3");
+    mp.setDataSource(afd.getFileDescriptor());
+    mp.prepare();
+  }
+  catch(IOException e){
+    println("file did not load");
+  }
+  mp.start;
 
   unlockedLvlFile = "unlockedLvl";
   unlockedLvl = load(unlockedLvlFile);
@@ -122,7 +135,7 @@ class ball {
 
     if (x > width - r || x < r) {   //if ball have to bounce on right or left wall
       a = PI - a;
-      gm.levels.get(gm.lvl-1).bounces.add(new bounce(x, y));
+      gm.levels.get(gm.lvl-1).bounces.add(new bounce(x, y,green));
     }
     if (y > height*0.98f - r ) {   //if ball is at buttom screen
       gm.levels.get(gm.lvl-1).reset();
@@ -149,7 +162,7 @@ class ball {
         println("ball #1");
 
         a = PI - a;
-        gm.levels.get(gm.lvl-1).bounces.add(new bounce(x, y));
+        gm.levels.get(gm.lvl-1).bounces.add(new bounce(x, y,green));
       }
 
       //check Y movement bounce
@@ -162,7 +175,7 @@ class ball {
 
 
         a = TWO_PI - a;
-        gm.levels.get(gm.lvl-1).bounces.add(new bounce(x, y));
+        gm.levels.get(gm.lvl-1).bounces.add(new bounce(x, y,green));
       }
     }
     for (int i = 0; i < gm.levels.get(gm.lvl-1).Rrectangles.size(); i++) {   //all "bad" rectangles
@@ -252,6 +265,35 @@ class ball {
         }
       }
     }
+    
+    for (int i = 0; i < gm.levels.get(gm.lvl-1).turners.size(); i++) {  
+      
+      turner turner = gm.levels.get(gm.lvl-1).turners.get(i);
+
+      noStroke();
+      
+      if (dist(turner.x, turner.y, x, y) < turner.turnerWidth + r) {
+        if (turner.locked == false) {
+          a += turner.angle;
+          gm.levels.get(gm.lvl-1).turners.get(i).locked = true;
+          x = gm.levels.get(gm.lvl-1).turners.get(i).x;
+          y = gm.levels.get(gm.lvl-1).turners.get(i).y;
+        }
+      } else {
+        gm.levels.get(gm.lvl-1).turners.get(i).locked = false;
+      }
+    }
+    
+    for (int i = 0; i < gm.levels.get(gm.lvl-1).enemys.size(); i++) {   
+
+      enemy enemy = gm.levels.get(gm.lvl-1).enemys.get(i);
+
+      noStroke();
+
+      if (dist(enemy.x, enemy.y, x, y) < 2*r && (vx != 0 || vy != 0)) {
+        gm.levels.get(gm.lvl-1).reset();
+      }
+    }
 
 
 
@@ -276,15 +318,17 @@ class ball {
 class bounce{
   float x,y;
   public float r;
+  int c;
   
-  public bounce( float x, float y){
+  public bounce( float x, float y , int c){
     this.x = x;
     this.y = y;
     r = 0;
+    this.c = c;
   }
   
   public void run(){
-    fill(133, 255, 171,255*30/r-20);
+    fill(c,255*30/r-20);
     ellipse(x,y,r,r);
     r+= width/100;
     
@@ -392,6 +436,56 @@ class Ellipse {
     this.ellipseHeight = ellipseHeight;
   }
 }
+class enemy {
+  float x;
+  float y;
+  float sx;
+  float sy;
+  float vx;
+  float vy;
+  float svx;
+  float svy;
+  float r = width/44;
+
+  public enemy(float sx, float sy, float svx, float svy) {
+    this.x = sx;
+    this.y = sy;
+    this.sx = sx;
+    this.sy = sy;
+    this.vx = svx;
+    this.vy = svy;
+    this.svx = svx;
+    this.svy = svy;
+  }
+
+  public void run() {
+    //println("e_bll: " + vx + " " + vy);
+    x += vx;
+    y += vy;
+
+    if (x > width - r || x < r) {   //if ball have to bounce on right or left wall
+      vx *= -1;
+      if (x < r) {
+        x = r;
+      } else {
+        x = width-r;
+      }
+
+      //gm.levels.get(gm.lvl-1).bounces.add(new bounce(x, y, red));
+    }
+    if (y > height*0.98f - r || y < r + height/10 ) {   //if ball is at buttom screen
+      vy *= -1;
+
+      if (y < r + height/10) {
+        y = r + height/10;
+      } else {
+        y = height*0.98f - r;
+      }
+      //gm.levels.get(gm.lvl-1).bounces.add(new bounce(x, y, red));
+    }
+  }
+}
+
 class game {
   public int lvl;
 
@@ -403,7 +497,7 @@ class game {
     //adds lvls
     /*
      *   height*0.04
-     *   0 = blue ; 1 = red ; 2 = portal ; 3 = tornado ; 4 = hill
+     *   0 = blue ; 1 = red ; 2 = portal ; 3 = tornado ; 4 = hill ; 5 = turner ; 6 = enemy
      *
      */
     levels.add(new level(new float[][]{{0,0,height*0.5f,width*0.6f,height*0.04f}}));
@@ -418,17 +512,17 @@ class game {
     levels.add(new level(new float[][]{{0,width*0.2f,height*0.55f,height*0.04f,height*0.25f},{0,width*0.2f,height*0.2f,height*0.04f,height*0.25f},{3,width*0.2f+height*0.04f,height*0.35f,height*0.3f,height*0.3f},{1,width*0.2f+height*0.04f,height*0.55f,width*0.8f-height*0.04f,height*0.04f}}));
     levels.add(new level(new float[][]{{0,width*0.35f,height*0.3f,width*0.65f,height*0.04f},{4,width,height*0.5f,height*0.2f,height*0.2f},{4,height*0.1f,height*0.6f,height*0.2f,height*0.2f},{1,width-height*0.04f,height*0.7f,height*0.04f,height*0.3f}}));
     levels.add(new level(new float[][]{{1,0,height*0.4f,width,height*0.04f},{2,width*0.5f,height*0.49f,height*0.04f,height*0.04f},{2,width*0.5f,height*0.35f,height*0.04f,height*0.04f},{0,width*0.5f,height*0.8f,width*0.5f,height*0.04f},{0,0,height*0.67f,width*0.5f,height*0.04f},{0,width*0.5f,height*0.54f,width*0.5f,height*0.04f},{0,0,height*0.25f,width*0.5f,height*0.04f},{0,width*0.5f,height*0.12f,width*0.5f,height*0.04f}}));
-    levels.add(new level(new float[][]{{3,width*0.3f,height*0.7f,width*0.5f,width*0.5f},{3,width*0.7f,height*0.3f,width*0.5f,width*0.5f}}));
-    levels.add(new level(new float[][]{{4,width*0.3f,height*0.7f,width*0.5f,width*0.5f},{4,width*0.7f,height*0.3f,width*0.5f,width*0.5f}}));
-    levels.add(new level(new float[][]{}));
-    levels.add(new level(new float[][]{}));
-    levels.add(new level(new float[][]{}));
-    levels.add(new level(new float[][]{}));
-    levels.add(new level(new float[][]{}));
-    levels.add(new level(new float[][]{}));
-    levels.add(new level(new float[][]{}));
-    levels.add(new level(new float[][]{}));
-    levels.add(new level(new float[][]{}));
+    levels.add(new level(new float[][]{{3,width*0.7f,height*0.75f,width*0.5f,width*0.5f},{3,width*0.3f,height*0.55f,width*0.5f,width*0.5f},{3,width*0.7f,height*0.35f,width*0.5f,width*0.5f},{1,width*0.5f,height*0.55f,width*0.5f,height*0.04f},{1,0,height*0.73f,width*0.5f,height*0.04f},{0,0,height*0.33f,width*0.5f,height*0.04f},{0,width*0.5f,height*0.51f,width*0.5f,height*0.04f}}));
+    levels.add(new level(new float[][]{{4,width*0.25f,height*0.6f,width*0.5f,width*0.5f},{4,width*0.75f,height*0.6f-width*0.5f,width*0.5f,width*0.5f},{3,width*0.75f,height*0.6f,width*0.5f,width*0.5f},{3,width*0.25f,height*0.6f-width*0.5f,width*0.5f,width*0.5f}}));
+    levels.add(new level(new float[][]{{2,width*0.1f,height*0.5f,height*0.04f,height*0.04f},{2,width*0.9f,height*0.5f,height*0.04f,height*0.04f},{0,0,height*0.4f,width*0.9f,height*0.04f},{0,width*0.5f-height*0.04f,height*0.4f,height*0.04f,height*0.3f}}));
+    levels.add(new level(new float[][]{{1,0,height*0.1f,height*0.04f,height*0.4f},{1,0,height*0.6f,height*0.04f,height*0.3f},{1,width-height*0.04f,height*0.4f,height*0.04f,height*0.3f},{0,width*0.5f,height*0.53f,width*0.5f,height*0.04f},{0,0,height*0.33f,width*0.5f,height*0.04f}}));
+    levels.add(new level(new float[][]{{3,width*0.75f,height*0.5f,width*0.5f,width*0.5f},{2,width*0.9f,height*0.3f,width*0.1f,width*0.1f},{2,width*0.1f,height*0.3f,width*0.1f,width*0.1f},{1,width*0.5f,height*0.28f,width*0.3f,height*0.04f},{1,width*0.2f,height*0.32f,width*0.3f,height*0.04f},{1,width*0.8f,height*0.24f,width*0.2f,height*0.04f},{1,0,height*0.5f,height*0.04f,height*0.5f}}));
+    levels.add(new level(new float[][]{{0,0,height*0.9f-width*0.143f*0.5f,width/7,width/7},{0,width/7,height*0.9f-width*0.143f*2.5f,width/7,width/7},{0,width/7*2,height*0.9f-width*0.143f*4.5f,width/7,width/7},{0,width/7*3,height*0.9f-width*0.143f*6.5f,width/7,width/7},{0,width/7*4,height*0.9f-width*0.143f*4.5f,width/7,width/7},{0,width/7*5,height*0.9f-width*0.143f*2.5f,width/7,width/7},{0,width-width/7,height*0.9f-width*0.143f*0.5f,width/7,width/7},{1,0,height*0.9f-width*0.143f*6.5f,width/7,width*0.143f*6},{1,width-width/7,height*0.9f-width*0.143f*6.5f,width/7,width*0.143f*6}}));
+    levels.add(new level(new float[][]{{5,width*0.1f,height*0.5f,height*0.04f,PI*3/2},{5,width*0.5f,height*0.5f,height*0.04f,PI/2},{1,width*0.3f,height*0.3f,width*0.7f,height*0.04f},{1,width*0.3f,height*0.6f,height*0.04f,height*0.3f}}));
+    levels.add(new level(new float[][]{{1,0,height*0.15f,width*0.35f,height*0.04f},{1,width*0.65f,height*0.15f,width*0.35f,height*0.04f},{1,0,height*0.23f,width*0.4f,height*0.04f},{1,width*0.6f,height*0.23f,width*0.4f,height*0.04f},{5,width*0.5f,height*0.33f,height*0.04f,HALF_PI},{1,0,height*0.23f,height*0.04f,height*0.12f}}));
+    levels.add(new level(new float[][]{{6,width*0.25f,height*0.4f,width*0.015f,0},{6,width*0.5f,height*0.5f,width*0.015f,0},{6,width*0.75f,height*0.6f,width*0.015f,0},{6,width*0.75f,height*0.45f,width*-0.015f,0},{6,width*0.5f,height*0.55f,width*-0.015f,0},{6,width*0.25f,height*0.65f,width*-0.015f,0}}));
+    levels.add(new level(new float[][]{{6,width-height*0.04f,height*0.5f,0,width*0.015f},{6,width-height*0.04f,height*0.1f,0,width*0.015f},{5,width*0.5f,height*0.4f,height*0.04f,7*PI/4},{1,0,height*0.38f,width*0.4f,height*0.04f},{1,width-height*0.12f,0,height*0.04f,height*0.35f},{1,width-height*0.12f,height*0.45f,height*0.04f,height*0.55f},{2,width*0.5f,height*0.6f,height*0.04f,height*0.04f},{2,width*0.1f,height*0.5f,height*0.04f,height*0.04f}}));
+    levels.add(new level(new float[][]{{2,width*0.9f,height*0.9f,height*0.04f,height*0.04f},{2,width*0.1f,height*0.6f,height*0.04f,height*0.04f},{5,width*0.9f,height*0.6f,height*0.04f,PI+HALF_PI*0.7f},{0,width*0.1f-height*0.02f,height*0.88f,height*0.04f,height*0.04f},{5,width*0.5f,height*0.75f,height*0.04f,PI+HALF_PI*0.7f},{1,width*0.4f-height*0.04f,0,height*0.04f,height*0.5f},{1,width*0.6f,0,height*0.04f,height*0.5f},{0,0,height*0.28f,width*0.4f,height*0.04f},{0,width*0.6f,height*0.28f,width*0.4f,height*0.04f}}));
     levels.add(new level(new float[][]{}));
     levels.add(new level(new float[][]{}));
     levels.add(new level(new float[][]{}));
@@ -450,7 +544,7 @@ class game {
     if (lvl <= levels.size()) {
       level level = levels.get(lvl-1);
       level.reset();
-      println(levels.get(lvl-1).t);
+      //println(levels.get(lvl-1).t);
     } else {
       mn.y = 0;
       page = 0;
@@ -489,7 +583,7 @@ class help {
 
         y = mouseY - ys;
         if (y > 0) y = 0;
-        if(y < -1* width*2.9f + height*0.8f) y = PApplet.parseInt(-1* width*2.9f+ height*0.8f);
+        if(y < -1* width*3.1f + height*0.8f) y = PApplet.parseInt(-1* width*3.1f+ height*0.8f);
       }
     } else {
       Mstatus = 0;
@@ -525,24 +619,28 @@ class help {
     ellipse(width*0.15f,width*1.55f+y,width*0.1f,width*0.1f);
     text("hills will repel the ball", width*0.25f, width*1.5f+y, width*0.7f, height);
     
+    fill(orange);
+    ellipse(width*0.15f,width*1.75f+y,width*0.1f,width*0.1f);
+    text("turners will rotate the ball", width*0.25f, width*1.7f+y, width*0.7f, height);
+    
     if (darkmode) {
       stroke(255);
     } else {
       stroke(0);
     }
     strokeWeight(height/400);
-    line(0,width*1.7f+y,width,width*1.7f+y);
+    line(0,width*1.9f+y,width,width*1.9f+y);
     
     noStroke();
-    button help_back_btn = new button(PApplet.parseInt(width*0.15f),PApplet.parseInt( width*1.9f+y), 3, PApplet.parseInt(width*0.03f), color(255), color(0), color(0));
+    button help_back_btn = new button(PApplet.parseInt(width*0.15f),PApplet.parseInt( width*2.1f+y), 3, PApplet.parseInt(width*0.03f), color(255), color(0), color(0));
     help_back_btn.run();
-    button help_info_btn = new button(PApplet.parseInt(width*0.15f),PApplet.parseInt( width*2.1f+y), 2, PApplet.parseInt(width*0.03f), color(255), color(0), color(0));
+    button help_info_btn = new button(PApplet.parseInt(width*0.15f),PApplet.parseInt( width*2.3f+y), 2, PApplet.parseInt(width*0.03f), color(255), color(0), color(0));
     help_info_btn.run();
-    button help_darkmode_btn = new button(PApplet.parseInt(width*0.15f),PApplet.parseInt( width*2.3f+y), 4, PApplet.parseInt(width*0.03f), color(255), color(0), color(0));
+    button help_darkmode_btn = new button(PApplet.parseInt(width*0.15f),PApplet.parseInt( width*2.5f+y), 4, PApplet.parseInt(width*0.03f), color(255), color(0), color(0));
     help_darkmode_btn.run();
-    button help_music_btn = new button(PApplet.parseInt(width*0.15f),PApplet.parseInt( width*2.5f+y), 31, PApplet.parseInt(width*0.03f), color(255), color(0), color(0));
+    button help_music_btn = new button(PApplet.parseInt(width*0.15f),PApplet.parseInt( width*2.7f+y), 31, PApplet.parseInt(width*0.03f), color(255), color(0), color(0));
     help_music_btn.run();
-    button help_reset_btn = new button(PApplet.parseInt(width*0.15f),PApplet.parseInt( width*2.7f+y), 0, PApplet.parseInt(width*0.03f), color(255), color(0), color(0));
+    button help_reset_btn = new button(PApplet.parseInt(width*0.15f),PApplet.parseInt( width*2.9f+y), 0, PApplet.parseInt(width*0.03f), color(255), color(0), color(0));
     help_reset_btn.run();
     
     if (darkmode) {
@@ -553,11 +651,11 @@ class help {
     textSize(width*0.05f);
     textAlign(LEFT);
      
-    text("go back to menu", width*0.25f, width*1.86f+y, width*0.7f, height);
-    text("about the game (you are currently here)", width*0.25f, width*2.06f+y, width*0.7f, height);
-    text("toggle darkmode on/off", width*0.25f, width*2.26f+y, width*0.7f, height);
-    text("toggle music on/off", width*0.25f, width*2.46f+y, width*0.7f, height);
-    text("restarts the current level", width*0.25f, width*2.66f+y, width*0.7f, height);
+    text("go back to menu", width*0.25f, width*2.06f+y, width*0.7f, height);
+    text("about the game (you are currently here)", width*0.25f, width*2.26f+y, width*0.7f, height);
+    text("toggle darkmode on/off", width*0.25f, width*2.46f+y, width*0.7f, height);
+    text("toggle music on/off", width*0.25f, width*2.66f+y, width*0.7f, height);
+    text("restarts the current level", width*0.25f, width*2.86f+y, width*0.7f, height);
     
     if (darkmode) {
       stroke(255);
@@ -565,7 +663,7 @@ class help {
       stroke(0);
     }
     strokeWeight(height/400);
-    line(0,width*2.9f+y,width,width*2.9f+y);
+    line(0,width*3.1f+y,width,width*3.1f+y);
     
     if (darkmode) {
       fill(255);
@@ -575,7 +673,7 @@ class help {
     textSize(width*0.037f);
     textAlign(CENTER);
 
-    text("https://github.com/Felixpointexe/bounz/", width*0.1f, width*3+y, width*0.8f, height);
+    text("https://github.com/Felixpointexe/bounz/", width*0.1f, width*3.2f+y, width*0.8f, height);
     
    
 
@@ -619,6 +717,8 @@ class level {
   ArrayList<portal> portales = new ArrayList<portal>();   //list of all portales
   ArrayList<tornado> tornados = new ArrayList<tornado>();   //list of all tornados
   ArrayList<tornado> hills = new ArrayList<tornado>();   //list of all tornados
+  ArrayList<turner> turners = new ArrayList<turner>();   //list of all tornados
+  ArrayList<enemy> enemys = new ArrayList<enemy>();   //list of all tornados
   ArrayList<bounce> bounces = new ArrayList<bounce>();
 
   /*
@@ -642,6 +742,12 @@ class level {
       }
       if (data[i][0] == 4 ) {
         hills.add(new tornado(data[i][1], data[i][2], data[i][3], data[i][4]));
+      }
+      if (data[i][0] == 5 ) {
+        turners.add(new turner(data[i][1], data[i][2], data[i][3], data[i][4]));
+      }
+      if (data[i][0] == 6 ) {
+        enemys.add(new enemy(data[i][1], data[i][2], data[i][3], data[i][4]));
       }
     }
 
@@ -714,7 +820,7 @@ class level {
     noStroke();
     
     for (int i = 0; i < tornados.size(); i++) {  
-      for (int j = 0; j < tornados.get(i).tornadoWidth; j += tornados.get(i).tornadoWidth / 10) {
+      for (int j = 0; j < tornados.get(i).tornadoWidth + 10; j += tornados.get(i).tornadoWidth / 10) {
         fill(purple,80);
         ellipse(tornados.get(i).x, tornados.get(i).y, j, j);
       }
@@ -723,7 +829,7 @@ class level {
     }
     
     for (int i = 0; i < hills.size(); i++) {  
-      for (int j = 0; j < hills.get(i).tornadoWidth; j += hills.get(i).tornadoWidth / 10) {
+      for (int j = 0; j < hills.get(i).tornadoWidth +10; j += hills.get(i).tornadoWidth / 10) {
         fill(pink,80);
         ellipse(hills.get(i).x, hills.get(i).y, j, j);
       }
@@ -750,6 +856,25 @@ class level {
       ellipse(portales.get(i).x, portales.get(i).y, portales.get(i).portalWidth, portales.get(i).portalHeight);
       fill(yellow, 60);
       ellipse(portales.get(i).x, portales.get(i).y, portales.get(i).portalWidth+width/10, portales.get(i).portalHeight+width/10);
+    }
+    
+    for (int i = 0; i < turners.size(); i++) {   
+      fill(orange);
+      ellipse(turners.get(i).x, turners.get(i).y, turners.get(i).turnerWidth, turners.get(i).turnerWidth);
+      fill(orange, 60);
+      ellipse(turners.get(i).x, turners.get(i).y, turners.get(i).turnerWidth+width/10, turners.get(i).turnerWidth+width/10);
+      fill(201, 134, 62);
+      arc(turners.get(i).x, turners.get(i).y, turners.get(i).turnerWidth*0.75f, turners.get(i).turnerWidth*0.75f,-HALF_PI, PI-(turners.get(i).angle-HALF_PI));
+      fill(orange);
+      ellipse(turners.get(i).x, turners.get(i).y, turners.get(i).turnerWidth*0.5f, turners.get(i).turnerWidth*0.5f);
+    }
+    
+    for (int i = 0; i < enemys.size(); i++) {   
+      fill(red);
+      rect(enemys.get(i).x-height*0.02f, enemys.get(i).y-height*0.02f,height*0.04f,height*0.04f,80);
+      fill(red,60);
+      rect(enemys.get(i).x-height*0.02f-width/20, enemys.get(i).y-height*0.02f-width/20,height*0.04f+width/10,height*0.04f+width/10,80);
+      enemys.get(i).run();
     }
 
     
@@ -800,6 +925,13 @@ class level {
 
   public void reset() {
     //background(255);
+    
+    for (int i = 0; i < enemys.size(); i++) {   
+      enemys.get(i).x = enemys.get(i).sx;
+      enemys.get(i).y = enemys.get(i).sy;
+      enemys.get(i).vx = enemys.get(i).svx;
+      enemys.get(i).vy = enemys.get(i).svy;
+    }
 
     bll = new ball(width*0.5f, height*0.9f, 0, 0, width/44, 0);
     status = 0;
@@ -894,6 +1026,7 @@ class menu {
     }
     
     if (help_btn.pressed()) {
+      //mp.start;
       page = 2;
     }
     
@@ -975,4 +1108,19 @@ class tornado {
   }
 }
 
+class turner {
+  float x;
+  float y;
+  float turnerWidth;
+  float angle;
+  boolean locked = false;
+
+  public turner(float x, float y, float turnerWidth, float angle) {
+    this.x = x;
+    this.y = y;
+    this.turnerWidth = turnerWidth;
+    this.angle = angle;
+    locked = false;
+  }
+}
 
