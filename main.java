@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.io.OutputStream; 
 import java.io.IOException; 
 
+
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.content.Context;
@@ -32,6 +33,7 @@ MediaPlayer mp;
 game gm;
 menu mn;
 help hlp;
+end end;
 
 //user settings
 boolean darkmode = false;
@@ -39,7 +41,7 @@ boolean music =true;
 
 //app data
 int page = 0;   //0 = menu ; 1 = game
-int unlockedLvl = 0;
+int unlockedLvl = 50;
 String unlockedLvlFile;
 float g = 0.1f;
 
@@ -65,6 +67,7 @@ public void setup() {
   gm = new game(5);
   mn = new menu();
   hlp = new help();
+  end = new end();
   
   
   act = this.getActivity();
@@ -81,7 +84,7 @@ public void setup() {
   catch(IOException e){
     println("file did not load");
   }
-  mp.start;
+  //mp.start;
 
   unlockedLvlFile = "unlockedLvl";
   unlockedLvl = load(unlockedLvlFile);
@@ -100,6 +103,10 @@ public void draw() {
   
   if (page == 2) {
     hlp.run();
+  }
+  
+  if (page == 3) {
+    end.run();
   }
 }
 
@@ -147,6 +154,7 @@ class ball {
       unlockedLvl ++;
       save(unlockedLvl,unlockedLvlFile);
       gm.reset();
+      
     }
 
     for (int i = 0; i < gm.levels.get(gm.lvl-1).Grectangles.size(); i++) {   //all "good" rectangles
@@ -314,7 +322,6 @@ class ball {
     y += vy;   //calculates new ball y
   }
 }
-
 class bounce{
   float x,y;
   public float r;
@@ -328,7 +335,7 @@ class bounce{
   }
   
   public void run(){
-    fill(c,255*30/r-20);
+    fill(c,255-(r*255)/(width*0.5));
     ellipse(x,y,r,r);
     r+= width/100;
     
@@ -434,6 +441,74 @@ class Ellipse {
     this.y = y;
     this.ellipseWidth = ellipseWidth;
     this.ellipseHeight = ellipseHeight;
+  }
+}
+class end {
+
+  button back_btn;
+  int t = 0;
+  int y, ys;
+  int Mstatus;
+
+  end() {
+    back_btn = new button(PApplet.parseInt(width*0.1f), PApplet.parseInt(height*0.05f), 3, PApplet.parseInt(width*0.03f), color(0), color(255), color(0));
+  }
+
+  public void run() {
+    t++;
+    if (darkmode) {
+      background(0);
+    } else {
+      background(255);
+    }
+
+    noStroke();
+
+    if (mousePressed && mouseY > height*0.1f) {
+
+      if (Mstatus == 0) {
+        Mstatus = 1;
+        ys = mouseY-y;
+      } else {
+
+        y = mouseY - ys;
+        if (y > 0) y = 0;
+        if (y < -1* width*1.6f + height*0.8f) y = PApplet.parseInt(-1* width*1.6f+ height*0.8f);
+      }
+    } else {
+      Mstatus = 0;
+    }
+
+    textSize(width*0.09f);
+    textAlign(CENTER);
+
+    fill(random(0, 255), random(0, 255), random(0, 255), 200);
+    text("congratulation!", width*0.1f+sin(t*0.1f)*width*0.1f, width*0.4f+sin(t*0.07f)*width*0.05f+y, width*0.8f, height);
+
+    textSize(width*0.05f);
+    textAlign(CENTER);
+
+    fill(blue);
+    text("you passed all " + gm.levels.size() + " levels", width*0.1f, width*0.6f+y, width*0.8f, height);
+
+    fill(blue);
+    text("please let me know your impressions of the game", width*0.1f, width*0.9f+y, width*0.8f, height);
+    text("Discord: Feljx#0260", width*0.1f, width*1.1f+y, width*0.8f, height);
+    text("I would be happy about new level ideas", width*0.1f, width*1.4f+y, width*0.8f, height);
+    text("-Felix-", width*0.1f, width*1.7f+y, width*0.8f, height);
+
+
+
+    fill(blue);
+    noStroke();
+    rect(0, 0, width, height/10);   //tob bar
+
+    back_btn.run();
+
+    if (back_btn.pressed()) {
+      mn.y = 0;
+      page = 0;
+    }
   }
 }
 class enemy {
@@ -546,8 +621,9 @@ class game {
       level.reset();
       //println(levels.get(lvl-1).t);
     } else {
+      lvl = 1;
       mn.y = 0;
-      page = 0;
+      page = 3;
     }
   }
 }
