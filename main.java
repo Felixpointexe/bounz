@@ -34,6 +34,7 @@ game gm;
 menu mn;
 help hlp;
 end end;
+demoLevel dmLvl;
 
 //user settings
 boolean darkmode = false;
@@ -68,6 +69,7 @@ public void setup() {
   mn = new menu();
   hlp = new help();
   end = new end();
+  dmLvl = new demoLevel();
   
   
   act = this.getActivity();
@@ -77,14 +79,14 @@ public void setup() {
   
   try{
     mp = new MediaPlayer();
-    afd = context.getAssets().openFd("name.mp3");
+    afd = cnt.getAssets().openFd("name.mp3");
     mp.setDataSource(afd.getFileDescriptor());
     mp.prepare();
   }
   catch(IOException e){
     println("file did not load");
   }
-  //mp.start;
+  mp.start;
 
   unlockedLvlFile = "unlockedLvl";
   unlockedLvl = load(unlockedLvlFile);
@@ -108,6 +110,10 @@ public void draw() {
   if (page == 3) {
     end.run();
   }
+  
+  if (page == 4) {
+    dmLvl.run();
+  }
 }
 
 
@@ -128,6 +134,7 @@ class ball {
   int r;   //ball radius
   float a = 0;   //ball angle
   float v = 0;
+  boolean demo = false;
 
   ball(float x, float y, float vx, float vy, int r, float v) {
     this.x = x;
@@ -142,166 +149,55 @@ class ball {
 
     if (x > width - r || x < r) {   //if ball have to bounce on right or left wall
       a = PI - a;
-      gm.levels.get(gm.lvl-1).bounces.add(new bounce(x, y,green));
+      gm.levels.get(gm.lvl-1).bounces.add(new bounce(x, y, green));
     }
     if (y > height*0.98f - r ) {   //if ball is at buttom screen
-      gm.levels.get(gm.lvl-1).reset();
+      if (demo) {
+        dmLvl.lvl.reset();
+      } else {
+        gm.levels.get(gm.lvl-1).reset();
+      }
     }
     if (y < r + height/10 ) {   //if buttom is at top screen
-      //println(y);
-      gm.reset();
-      gm.lvl++;
-      unlockedLvl ++;
-      save(unlockedLvl,unlockedLvlFile);
-      gm.reset();
-      
-    }
-
-    for (int i = 0; i < gm.levels.get(gm.lvl-1).Grectangles.size(); i++) {   //all "good" rectangles
-
-      Rectangle rectangle = gm.levels.get(gm.lvl-1).Grectangles.get(i);
-
-      //check X movment bounce
-      if (x + 1*r + vx > rectangle.x && 
-        x + vx < rectangle.x + rectangle.rectWidth && 
-        y + 1*r > rectangle.y && 
-        y < rectangle.y + rectangle.rectHeight) {
-
-        println("ball #1");
-
-        a = PI - a;
-        gm.levels.get(gm.lvl-1).bounces.add(new bounce(x, y,green));
-      }
-
-      //check Y movement bounce
-      if (x + 1*r > rectangle.x && 
-        x < rectangle.x + rectangle.rectWidth && 
-        y + 1*r + vy > rectangle.y && 
-        y + vy < rectangle.y + rectangle.rectHeight) {
-
-        println("ball #2");
-
-
-        a = TWO_PI - a;
-        gm.levels.get(gm.lvl-1).bounces.add(new bounce(x, y,green));
-      }
-    }
-    for (int i = 0; i < gm.levels.get(gm.lvl-1).Rrectangles.size(); i++) {   //all "bad" rectangles
-
-      Rectangle rectangle = gm.levels.get(gm.lvl-1).Rrectangles.get(i);
-
-      //check X movment bounce
-      if (x + 2*r + vx > rectangle.x && 
-        x + vx < rectangle.x + rectangle.rectWidth && 
-        y + 2*r > rectangle.y && 
-        y < rectangle.y + rectangle.rectHeight) {
-
-        gm.levels.get(gm.lvl-1).reset();
-      }
-
-      //check Y movement bounce
-      if (x + 2*r > rectangle.x && 
-        x < rectangle.x + rectangle.rectWidth && 
-        y + 2*r + vy > rectangle.y && 
-        y + vy < rectangle.y + rectangle.rectHeight) {
-
-
-        gm.levels.get(gm.lvl-1).reset();
-      }
-    }
-    for (int i = 0; i < gm.levels.get(gm.lvl-1).portales.size(); i++) {   
-
-      portal portal = gm.levels.get(gm.lvl-1).portales.get(i);
-
-      noStroke();
-
-      if (dist(portal.x, portal.y, x, y) < portal.portalWidth + r) {
-        if (portal.locked == false) {
-          if (gm.levels.get(gm.lvl-1).portales.size() > 1) {
-            int r = i;
-            while (i == r) {
-              r = PApplet.parseInt(random(0, gm.levels.get(gm.lvl-1).portales.size()));
-            }
-            gm.levels.get(gm.lvl-1).portales.get(r).locked = true;
-            x = gm.levels.get(gm.lvl-1).portales.get(r).x;
-            y = gm.levels.get(gm.lvl-1).portales.get(r).y;
-          }
-        }
+      if (demo) {
+        dmLvl.lvl.reset();
       } else {
-        gm.levels.get(gm.lvl-1).portales.get(i).locked = false;
+        //println(y);
+        gm.reset();
+        gm.lvl++;
+        unlockedLvl ++;
+        save(unlockedLvl,unlockedLvlFile);
+        gm.reset();
       }
     }
-    
-    for (int i = 0; i < gm.levels.get(gm.lvl-1).tornados.size(); i++) {   
 
-      tornado tornado = gm.levels.get(gm.lvl-1).tornados.get(i);
-
-      float dirToMiddle = TWO_PI-(atan2(tornado.y-y, tornado.x-x) + TWO_PI ) % TWO_PI;
-      float dirOfMove = a;
-
-      noStroke();
-
-      if (dist(tornado.x, tornado.y, x, y) < tornado.tornadoWidth/2 + r) {
-
-        float n = g * ( ((tornado.tornadoWidth/2)-dist(tornado.x, tornado.y, x, y)) / (tornado.tornadoWidth/2));
-
-        if ((dirToMiddle-dirOfMove+TWO_PI)%TWO_PI < (dirOfMove-dirToMiddle+TWO_PI)%TWO_PI) {
-          a = ((dirToMiddle-dirOfMove+TWO_PI)%TWO_PI)*n+dirOfMove;
-        } else {
-          a = dirOfMove-((dirOfMove-dirToMiddle+TWO_PI)%TWO_PI)*n;
-        }
-      }
+    if ( demo) {
+      testGrects(dmLvl.lvl.Grectangles);
+      testRrects(dmLvl.lvl.Rrectangles);
+      testPortals(dmLvl.lvl.portales);
+      testTornado(dmLvl.lvl.tornados);
+      testHills(dmLvl.lvl.hills);
+      testTurners(dmLvl.lvl.turners);
+      testEnemys(dmLvl.lvl.enemys);
+    } else {
+      testGrects(gm.levels.get(gm.lvl-1).Grectangles);
+      testRrects(gm.levels.get(gm.lvl-1).Rrectangles);
+      testPortals(gm.levels.get(gm.lvl-1).portales);
+      testTornado(gm.levels.get(gm.lvl-1).tornados);
+      testHills(gm.levels.get(gm.lvl-1).hills);
+      testTurners(gm.levels.get(gm.lvl-1).turners);
+      testEnemys(gm.levels.get(gm.lvl-1).enemys);
     }
-    
-    for (int i = 0; i < gm.levels.get(gm.lvl-1).hills.size(); i++) {   
 
-      tornado hill = gm.levels.get(gm.lvl-1).hills.get(i);
 
-      float dirToMiddle = TWO_PI-(atan2(hill.y-y, hill.x-x) + TWO_PI ) % TWO_PI;
-      float dirOfMove = a;
 
-      noStroke();
 
-      if (dist(hill.x, hill.y, x, y) < hill.tornadoWidth/2 + r) {
 
-        float n = g * ( ((hill.tornadoWidth/2)-dist(hill.x, hill.y, x, y)) / (hill.tornadoWidth/2));
 
-        if ((dirToMiddle-dirOfMove+TWO_PI)%TWO_PI > (dirOfMove-dirToMiddle+TWO_PI)%TWO_PI) {
-          a = ((dirToMiddle-dirOfMove+TWO_PI)%TWO_PI)*n+dirOfMove;
-        } else {
-          a = dirOfMove-((dirOfMove-dirToMiddle+TWO_PI)%TWO_PI)*n;
-        }
-      }
-    }
-    
-    for (int i = 0; i < gm.levels.get(gm.lvl-1).turners.size(); i++) {  
-      
-      turner turner = gm.levels.get(gm.lvl-1).turners.get(i);
 
-      noStroke();
-      
-      if (dist(turner.x, turner.y, x, y) < turner.turnerWidth + r) {
-        if (turner.locked == false) {
-          a += turner.angle;
-          gm.levels.get(gm.lvl-1).turners.get(i).locked = true;
-          x = gm.levels.get(gm.lvl-1).turners.get(i).x;
-          y = gm.levels.get(gm.lvl-1).turners.get(i).y;
-        }
-      } else {
-        gm.levels.get(gm.lvl-1).turners.get(i).locked = false;
-      }
-    }
-    
-    for (int i = 0; i < gm.levels.get(gm.lvl-1).enemys.size(); i++) {   
 
-      enemy enemy = gm.levels.get(gm.lvl-1).enemys.get(i);
 
-      noStroke();
 
-      if (dist(enemy.x, enemy.y, x, y) < 2*r && (vx != 0 || vy != 0)) {
-        gm.levels.get(gm.lvl-1).reset();
-      }
-    }
 
 
 
@@ -321,6 +217,187 @@ class ball {
     x += vx;   //calculates new ball x
     y += vy;   //calculates new ball y
   }
+
+
+  public void testGrects(ArrayList<Rectangle> rects) {
+    for (int i = 0; i < rects.size(); i++) {   //all "good" rectangles
+
+      Rectangle rectangle = rects.get(i);
+
+      //check X movment bounce
+      if (x + 1*r + vx > rectangle.x && 
+        x + vx < rectangle.x + rectangle.rectWidth && 
+        y + 1*r > rectangle.y && 
+        y < rectangle.y + rectangle.rectHeight) {
+
+        println("ball #1");
+
+        a = PI - a;
+        gm.levels.get(gm.lvl-1).bounces.add(new bounce(x, y, green));
+      }
+
+      //check Y movement bounce
+      if (x + 1*r > rectangle.x && 
+        x < rectangle.x + rectangle.rectWidth && 
+        y + 1*r + vy > rectangle.y && 
+        y + vy < rectangle.y + rectangle.rectHeight) {
+
+        println("ball #2");
+
+
+        a = TWO_PI - a;
+        gm.levels.get(gm.lvl-1).bounces.add(new bounce(x, y, green));
+      }
+    }
+  }
+
+
+
+  public void testRrects(ArrayList<Rectangle> rects) {
+    for (int i = 0; i < rects.size(); i++) {   //all "bad" rectangles
+
+      Rectangle rectangle = rects.get(i);
+
+      //check X movment bounce
+      if (x + 2*r + vx > rectangle.x && 
+        x + vx < rectangle.x + rectangle.rectWidth && 
+        y + 2*r > rectangle.y && 
+        y < rectangle.y + rectangle.rectHeight) {
+        if (demo) {
+          dmLvl.lvl.reset();
+        } else {
+          gm.levels.get(gm.lvl-1).reset();
+        }
+      }
+
+      //check Y movement bounce
+      if (x + 2*r > rectangle.x && 
+        x < rectangle.x + rectangle.rectWidth && 
+        y + 2*r + vy > rectangle.y && 
+        y + vy < rectangle.y + rectangle.rectHeight) {
+
+        if (demo) {
+          dmLvl.lvl.reset();
+        } else {
+          gm.levels.get(gm.lvl-1).reset();
+        }
+      }
+    }
+  }
+
+
+  public void testPortals(ArrayList<portal> ports) {
+    for (int i = 0; i < ports.size(); i++) {   
+
+      portal portal = ports.get(i);
+
+      noStroke();
+
+      if (dist(portal.x, portal.y, x, y) < portal.portalWidth + r) {
+        if (portal.locked == false) {
+          if (gm.levels.get(gm.lvl-1).portales.size() > 1) {
+            int r = i;
+            while (i == r) {
+              r = PApplet.parseInt(random(0, ports.size()));
+            }
+            if (demo) {
+              dmLvl.lvl.portales.get(r).locked = true;
+            } else {
+              gm.levels.get(gm.lvl-1).portales.get(r).locked = true;
+            }
+            x = ports.get(r).x;
+            y = ports.get(r).y;
+          }
+        }
+      } else {
+        dmLvl.lvl.portales.get(i).locked = false;
+      }
+    }
+  }
+
+  public void testTornado(ArrayList<tornado> tornados) {
+    for (int i = 0; i < tornados.size(); i++) {   
+
+      tornado tornado = tornados.get(i);
+
+      float dirToMiddle = TWO_PI-(atan2(tornado.y-y, tornado.x-x) + TWO_PI ) % TWO_PI;
+      float dirOfMove = a;
+
+      noStroke();
+
+      if (dist(tornado.x, tornado.y, x, y) < tornado.tornadoWidth/2 + r) {
+
+        float n = g * ( ((tornado.tornadoWidth/2)-dist(tornado.x, tornado.y, x, y)) / (tornado.tornadoWidth/2));
+
+        if ((dirToMiddle-dirOfMove+TWO_PI)%TWO_PI < (dirOfMove-dirToMiddle+TWO_PI)%TWO_PI) {
+          a = ((dirToMiddle-dirOfMove+TWO_PI)%TWO_PI)*n+dirOfMove;
+        } else {
+          a = dirOfMove-((dirOfMove-dirToMiddle+TWO_PI)%TWO_PI)*n;
+        }
+      }
+    }
+  }
+
+  public void testHills(ArrayList<tornado> hills) {
+    for (int i = 0; i < hills.size(); i++) {   
+
+      tornado hill = hills.get(i);
+
+      float dirToMiddle = TWO_PI-(atan2(hill.y-y, hill.x-x) + TWO_PI ) % TWO_PI;
+      float dirOfMove = a;
+
+      noStroke();
+
+      if (dist(hill.x, hill.y, x, y) < hill.tornadoWidth/2 + r) {
+
+        float n = g * ( ((hill.tornadoWidth/2)-dist(hill.x, hill.y, x, y)) / (hill.tornadoWidth/2));
+
+        if ((dirToMiddle-dirOfMove+TWO_PI)%TWO_PI > (dirOfMove-dirToMiddle+TWO_PI)%TWO_PI) {
+          a = ((dirToMiddle-dirOfMove+TWO_PI)%TWO_PI)*n+dirOfMove;
+        } else {
+          a = dirOfMove-((dirOfMove-dirToMiddle+TWO_PI)%TWO_PI)*n;
+        }
+      }
+    }
+  }
+
+  public void testTurners(ArrayList<turner> turners) {
+    for (int i = 0; i < turners.size(); i++) {  
+
+      turner turner = turners.get(i);
+
+      noStroke();
+
+      if (dist(turner.x, turner.y, x, y) < turner.turnerWidth + r) {
+        if (turner.locked == false) {
+          a += turner.angle;
+          dmLvl.lvl.turners.get(i).locked = true;
+          x = turners.get(i).x;
+          y = turners.get(i).y;
+        }
+      } else {
+        dmLvl.lvl.turners.get(i).locked = false;
+      }
+    }
+  }
+
+
+  public void testEnemys(ArrayList<enemy> enemys) {
+    for (int i = 0; i < enemys.size(); i++) {   
+
+      enemy enemy = enemys.get(i);
+
+      noStroke();
+
+      if (dist(enemy.x, enemy.y, x, y) < 2*r && (vx != 0 || vy != 0)) {
+        if (demo) {
+          dmLvl.lvl.reset();
+        } else {
+          gm.levels.get(gm.lvl-1).reset();
+        }
+      }
+    }
+  }
 }
 class bounce{
   float x,y;
@@ -335,7 +412,7 @@ class bounce{
   }
   
   public void run(){
-    fill(c,255-(r*255)/(width*0.5));
+    fill(c,255-(r*255)/(width*0.5f));
     ellipse(x,y,r,r);
     r+= width/100;
     
@@ -348,13 +425,13 @@ class button {
   int x, y;
   int r ;
   int click = 0;
-  int dc,lc,loc;
+  int dc, lc, loc;
   String txt = "";
-  
-  boolean locked;
-  
 
-  public button(int x, int y, int mode, int r , int dc , int lc , int loc) {
+  boolean locked;
+
+
+  public button(int x, int y, int mode, int r, int dc, int lc, int loc) {
     this.x = x;
     this.y = y;
     this.mode = mode;
@@ -363,8 +440,8 @@ class button {
     this.lc = lc;
     this.loc = loc;
   }
-  
-  public void addTxt(String txt){
+
+  public void addTxt(String txt) {
     this.txt = txt;
   }
 
@@ -376,8 +453,8 @@ class button {
     } else {
       c = lc;
     }
-    
-    if(locked){
+
+    if (locked) {
       c = loc;
     }
     if (mode == 3) {
@@ -402,7 +479,13 @@ class button {
       fill(c, 60);
       ellipse(x, y, 3*r, 3*r);
       fill(c);
-      quad(x-r, y, x, y+r, x+r, y,x,y-r);
+      quad(x-r, y, x, y+r, x+r, y, x, y-r);
+    }
+    if (mode == 41) {
+      fill(c, 60);
+      ellipse(x, y, 3*r, 3*r);
+      fill(c);
+      quad(x - r*0.7f, y - r*0.7f, x - r*0.7f, y + r*0.7f, x + r*0.7f, y + r*0.7f, x + r*0.7f, y - r*0.7f);
     }
     if (mode == 2) {
       fill(c, 60);
@@ -412,7 +495,7 @@ class button {
       strokeWeight(width/66);
       line(x, y+r-width/66, x, y-r+width/66);
     }
-    
+
     if (darkmode) {
       fill(0);
     } else {
@@ -420,7 +503,7 @@ class button {
     }
     textSize(r*0.8f);
     textAlign(CENTER);
-    text(txt,x,y+r*0.3f);
+    text(txt, x, y+r*0.3f);
   }
 
   public boolean pressed() {
@@ -429,6 +512,22 @@ class button {
     }
     return false;
   }
+}
+class demoLevel{
+  
+  level lvl;
+  float data[][] = new float[][]{{3,width*0.1f,height*0.3f,width*0.5f,width*0.5f},{1,0,height*0.6f,height*0.04f,height*0.4f},{4,width,height*0.6f,width*0.4f,width*0.4f},{0,width*0.6f,height*0.4f,width*0.4f,height*0.04f},{6,width*0.8f,height*0.3f,0,width/66},{2,width*0.9f,height*0.85f,height*0.04f,height*0.04f},{2,width*0.14f,height*0.9f,height*0.04f,height*0.04f},{5,width*0.1f,height*0.5f,height*0.04f,PI+HALF_PI}};
+  
+  demoLevel(){
+    lvl = new level(data);
+    lvl.bll.demo = true;
+    lvl.demo = true;
+  }
+  
+  public void run(){
+    lvl.run();
+  }
+  
 }
 class Ellipse {
   float x;
@@ -522,6 +621,8 @@ class enemy {
   float svy;
   float r = width/44;
 
+  boolean demo = false;
+
   public enemy(float sx, float sy, float svx, float svy) {
     this.x = sx;
     this.y = sy;
@@ -548,19 +649,84 @@ class enemy {
 
       //gm.levels.get(gm.lvl-1).bounces.add(new bounce(x, y, red));
     }
-    if (y > height*0.98f - r || y < r + height/10 ) {   //if ball is at buttom screen
+    if (y > height*0.98f - r || y < r + height*0.12f ) {   //if ball is at buttom screen
       vy *= -1;
 
-      if (y < r + height/10) {
-        y = r + height/10;
+      if (y < r + height*0.12f) {
+        y = r + height*0.12f;
       } else {
         y = height*0.98f - r;
       }
       //gm.levels.get(gm.lvl-1).bounces.add(new bounce(x, y, red));
     }
+
+    if (demo) {
+      testGrects(dmLvl.lvl.Grectangles);
+      testRrects(dmLvl.lvl.Rrectangles);
+    } else {
+      testGrects(gm.levels.get(gm.lvl-1).Grectangles);
+      testRrects(gm.levels.get(gm.lvl-1).Rrectangles);
+    }
+  }
+
+
+  public void testGrects(ArrayList<Rectangle> rects) {
+    for (int i = 0; i < rects.size(); i++) {   //all "good" rectangles
+
+      Rectangle rectangle = rects.get(i);
+
+      //check X movment bounce
+      if (x + 1*r + vx > rectangle.x && 
+        x + vx < rectangle.x + rectangle.rectWidth && 
+        y + 1*r > rectangle.y && 
+        y < rectangle.y + rectangle.rectHeight) {
+
+        println("ball #1");
+
+        vx *= -1;
+      }
+
+      //check Y movement bounce
+      if (x + 1*r > rectangle.x && 
+        x < rectangle.x + rectangle.rectWidth && 
+        y + 1*r + vy > rectangle.y && 
+        y + vy < rectangle.y + rectangle.rectHeight) {
+
+        println("ball #2");
+
+
+        vy *= -1;
+      }
+    }
+  }
+
+
+
+  public void testRrects(ArrayList<Rectangle> rects) {
+    for (int i = 0; i < rects.size(); i++) {   //all "bad" rectangles
+
+      Rectangle rectangle = rects.get(i);
+
+      //check X movment bounce
+      if (x + 2*r + vx > rectangle.x && 
+        x + vx < rectangle.x + rectangle.rectWidth && 
+        y + 2*r > rectangle.y && 
+        y < rectangle.y + rectangle.rectHeight) {
+
+        vx *= -1;
+      }
+
+      //check Y movement bounce
+      if (x + 2*r > rectangle.x && 
+        x < rectangle.x + rectangle.rectWidth && 
+        y + 2*r + vy > rectangle.y && 
+        y + vy < rectangle.y + rectangle.rectHeight) {
+
+        vy *= -1;
+      }
+    }
   }
 }
-
 class game {
   public int lvl;
 
@@ -598,7 +764,7 @@ class game {
     levels.add(new level(new float[][]{{6,width*0.25f,height*0.4f,width*0.015f,0},{6,width*0.5f,height*0.5f,width*0.015f,0},{6,width*0.75f,height*0.6f,width*0.015f,0},{6,width*0.75f,height*0.45f,width*-0.015f,0},{6,width*0.5f,height*0.55f,width*-0.015f,0},{6,width*0.25f,height*0.65f,width*-0.015f,0}}));
     levels.add(new level(new float[][]{{6,width-height*0.04f,height*0.5f,0,width*0.015f},{6,width-height*0.04f,height*0.1f,0,width*0.015f},{5,width*0.5f,height*0.4f,height*0.04f,7*PI/4},{1,0,height*0.38f,width*0.4f,height*0.04f},{1,width-height*0.12f,0,height*0.04f,height*0.35f},{1,width-height*0.12f,height*0.45f,height*0.04f,height*0.55f},{2,width*0.5f,height*0.6f,height*0.04f,height*0.04f},{2,width*0.1f,height*0.5f,height*0.04f,height*0.04f}}));
     levels.add(new level(new float[][]{{2,width*0.9f,height*0.9f,height*0.04f,height*0.04f},{2,width*0.1f,height*0.6f,height*0.04f,height*0.04f},{5,width*0.9f,height*0.6f,height*0.04f,PI+HALF_PI*0.7f},{0,width*0.1f-height*0.02f,height*0.88f,height*0.04f,height*0.04f},{5,width*0.5f,height*0.75f,height*0.04f,PI+HALF_PI*0.7f},{1,width*0.4f-height*0.04f,0,height*0.04f,height*0.5f},{1,width*0.6f,0,height*0.04f,height*0.5f},{0,0,height*0.28f,width*0.4f,height*0.04f},{0,width*0.6f,height*0.28f,width*0.4f,height*0.04f}}));
-    levels.add(new level(new float[][]{}));
+    levels.add(new level(new float[][]{{0,width*0.3f,height*0.7f,width*0.4f,height*0.04f},{6,width*0.5f,height*0.5f,0,width*0.015f},{1,width*0.6f,height*0.5f,width*0.4f,height*0.04f},{1,0,height*0.54f,width*0.4f,height*0.04f},{1,0,height*0.2f,width*0.4f,height*0.04f},{2,width*0.1f,height*0.9f,height*0.04f,height*0.04f},{2,width*0.62f,height*0.4f,height*0.04f,height*0.04f}}));
     levels.add(new level(new float[][]{}));
     levels.add(new level(new float[][]{}));
     levels.add(new level(new float[][]{}));
@@ -630,12 +796,14 @@ class game {
 class help {
 
   button back_btn;
+  button demoLvl_btn;
 
   int y, ys;
   int Mstatus;
 
   help() {
     back_btn = new button(PApplet.parseInt(width*0.1f), PApplet.parseInt(height*0.05f), 3, PApplet.parseInt(width*0.03f), color(0), color(255), color(0));
+    demoLvl_btn = new button(PApplet.parseInt(width*0.9f), PApplet.parseInt(height*0.05f), 41, PApplet.parseInt(width*0.03f), color(0), color(255), color(0));
   }
 
   public void run() {
@@ -763,6 +931,12 @@ class help {
       mn.y = 0;
       page = 0;
     }
+    
+    demoLvl_btn.run();
+
+    if (demoLvl_btn.pressed()) {
+      page = 4;
+    }
 
 
     
@@ -781,6 +955,8 @@ class level {
   button restart_btn;
 
   ball bll;
+
+  boolean demo = false;
 
 
 
@@ -846,9 +1022,13 @@ class level {
       reset();
     }
     if (back_btn.pressed()) {
-      mn.y = 0;
-      page = 0;
-      reset();
+      if (demo) {
+        page = 2;
+      } else {
+        mn.y = 0;
+        page = 0;
+        reset();
+      }
     }
 
     t++;
@@ -894,19 +1074,19 @@ class level {
 
 
     noStroke();
-    
+
     for (int i = 0; i < tornados.size(); i++) {  
       for (int j = 0; j < tornados.get(i).tornadoWidth + 10; j += tornados.get(i).tornadoWidth / 10) {
-        fill(purple,80);
+        fill(purple, 80);
         ellipse(tornados.get(i).x, tornados.get(i).y, j, j);
       }
       fill(purple, 60);
       ellipse(tornados.get(i).x, tornados.get(i).y, tornados.get(i).tornadoWidth+width/10, tornados.get(i).tornadoHeight+width/10);
     }
-    
+
     for (int i = 0; i < hills.size(); i++) {  
       for (int j = 0; j < hills.get(i).tornadoWidth +10; j += hills.get(i).tornadoWidth / 10) {
-        fill(pink,80);
+        fill(pink, 80);
         ellipse(hills.get(i).x, hills.get(i).y, j, j);
       }
       fill(pink, 60);
@@ -933,27 +1113,33 @@ class level {
       fill(yellow, 60);
       ellipse(portales.get(i).x, portales.get(i).y, portales.get(i).portalWidth+width/10, portales.get(i).portalHeight+width/10);
     }
-    
+
     for (int i = 0; i < turners.size(); i++) {   
       fill(orange);
       ellipse(turners.get(i).x, turners.get(i).y, turners.get(i).turnerWidth, turners.get(i).turnerWidth);
       fill(orange, 60);
       ellipse(turners.get(i).x, turners.get(i).y, turners.get(i).turnerWidth+width/10, turners.get(i).turnerWidth+width/10);
       fill(201, 134, 62);
-      arc(turners.get(i).x, turners.get(i).y, turners.get(i).turnerWidth*0.75f, turners.get(i).turnerWidth*0.75f,-HALF_PI, PI-(turners.get(i).angle-HALF_PI));
+      arc(turners.get(i).x, turners.get(i).y, turners.get(i).turnerWidth*0.75f, turners.get(i).turnerWidth*0.75f, -HALF_PI, PI-(turners.get(i).angle-HALF_PI));
       fill(orange);
       ellipse(turners.get(i).x, turners.get(i).y, turners.get(i).turnerWidth*0.5f, turners.get(i).turnerWidth*0.5f);
     }
-    
+
     for (int i = 0; i < enemys.size(); i++) {   
+
+      if (demo) {
+       enemys.get(i).demo = true;
+      }
+
+
       fill(red);
-      rect(enemys.get(i).x-height*0.02f, enemys.get(i).y-height*0.02f,height*0.04f,height*0.04f,80);
-      fill(red,60);
-      rect(enemys.get(i).x-height*0.02f-width/20, enemys.get(i).y-height*0.02f-width/20,height*0.04f+width/10,height*0.04f+width/10,80);
+      rect(enemys.get(i).x-height*0.02f, enemys.get(i).y-height*0.02f, height*0.04f, height*0.04f, 80);
+      fill(red, 60);
+      rect(enemys.get(i).x-height*0.02f-width/20, enemys.get(i).y-height*0.02f-width/20, height*0.04f+width/10, height*0.04f+width/10, 80);
       enemys.get(i).run();
     }
 
-    
+
 
 
 
@@ -985,23 +1171,32 @@ class level {
     }
     textSize(width/10);
     textAlign(CENTER);
-    text(gm.lvl, width/2, height*0.07f);
+    if (demo) {
+      text("demo", width/2, height*0.07f);
+    } else {
+      text(gm.lvl, width/2, height*0.07f);
+    }
 
 
-
-    bll.run();
+    
     //println("bll:" + bll.x + " " + bll.y);
 
 
 
     back_btn.run();
     restart_btn.run();
+
+    if (demo) {
+      bll.demo = true;
+    }
+    
+    bll.run();
   }
 
 
   public void reset() {
     //background(255);
-    
+
     for (int i = 0; i < enemys.size(); i++) {   
       enemys.get(i).x = enemys.get(i).sx;
       enemys.get(i).y = enemys.get(i).sy;
@@ -1014,7 +1209,6 @@ class level {
     t = 0;
   }
 }
-
 class menu {
 
   button darkmode_btn;
@@ -1183,7 +1377,6 @@ class tornado {
     this.tornadoHeight = tornadoHeight;
   }
 }
-
 class turner {
   float x;
   float y;
