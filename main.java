@@ -45,6 +45,7 @@ int page = 0;   //0 = menu ; 1 = game
 int unlockedLvl = 50;
 String unlockedLvlFile;
 float g = 0.1f;
+int btnTimeout = 0;
 
 
 //colors
@@ -78,15 +79,15 @@ public void setup() {
   editor = sp.edit();
   
   try{
-    mp = new MediaPlayer();
-    afd = cnt.getAssets().openFd("name.mp3");
-    mp.setDataSource(afd.getFileDescriptor());
-    mp.prepare();
+    bckGrnd_sound = new MediaPlayer();
+    afd = cnt.getAssets().openFd("background.mp3");
+    bckGrnd_sound.setDataSource(afd.getFileDescriptor());
+    bckGrnd_sound.prepare();
   }
   catch(IOException e){
     println("file did not load");
   }
-  mp.start;
+  bckGrnd_sound.loop();
 
   unlockedLvlFile = "unlockedLvl";
   unlockedLvl = load(unlockedLvlFile);
@@ -94,6 +95,8 @@ public void setup() {
 }
 
 public void draw() {
+  
+  btnTimeout ++;
 
   if (page == 0) {
     mn.run();
@@ -295,7 +298,7 @@ class ball {
 
       if (dist(portal.x, portal.y, x, y) < portal.portalWidth + r) {
         if (portal.locked == false) {
-          if (gm.levels.get(gm.lvl-1).portales.size() > 1) {
+          if (ports.size() > 1) {
             int r = i;
             while (i == r) {
               r = PApplet.parseInt(random(0, ports.size()));
@@ -310,7 +313,11 @@ class ball {
           }
         }
       } else {
-        dmLvl.lvl.portales.get(i).locked = false;
+        if (demo) {
+          dmLvl.lvl.portales.get(i).locked = false;
+        } else {
+          gm.levels.get(gm.lvl-1).portales.get(i).locked = false;
+        }
       }
     }
   }
@@ -371,25 +378,49 @@ class ball {
       if (dist(turner.x, turner.y, x, y) < turner.turnerWidth + r) {
         if (turner.locked == false) {
           a += turner.angle;
-          dmLvl.lvl.turners.get(i).locked = true;
+          if (demo) {
+            dmLvl.lvl.turners.get(i).locked = true;
+          } else {
+            gm.levels.get(gm.lvl-1).turners.get(i).locked = true;
+          }
+          
           x = turners.get(i).x;
           y = turners.get(i).y;
         }
       } else {
-        dmLvl.lvl.turners.get(i).locked = false;
+        if (demo) {
+          dmLvl.lvl.turners.get(i).locked = false;
+        } else {
+          gm.levels.get(gm.lvl-1).turners.get(i).locked = false;
+        }
       }
     }
   }
 
 
   public void testEnemys(ArrayList<enemy> enemys) {
-    for (int i = 0; i < enemys.size(); i++) {   
+    for (int i = 0; i < enemys.size(); i++) {   //all "bad" rectangles
 
       enemy enemy = enemys.get(i);
 
-      noStroke();
+      //check X movment bounce
+      if (x + 2*r + vx > enemy.x && 
+        x + vx < enemy.x + height*0.04f && 
+        y + 2*r > enemy.y && 
+        y < enemy.y + height*0.04f) {
+        if (demo) {
+          dmLvl.lvl.reset();
+        } else {
+          gm.levels.get(gm.lvl-1).reset();
+        }
+      }
 
-      if (dist(enemy.x, enemy.y, x, y) < 2*r && (vx != 0 || vy != 0)) {
+      //check Y movement bounce
+      if (x + 2*r > enemy.x && 
+        x < enemy.x + height*0.04f && 
+        y + 2*r + vy > enemy.y && 
+        y + vy < enemy.y + height*0.04f) {
+
         if (demo) {
           dmLvl.lvl.reset();
         } else {
@@ -399,6 +430,7 @@ class ball {
     }
   }
 }
+
 class bounce{
   float x,y;
   public float r;
@@ -513,10 +545,11 @@ class button {
     return false;
   }
 }
+
 class demoLevel{
   
   level lvl;
-  float data[][] = new float[][]{{3,width*0.1f,height*0.3f,width*0.5f,width*0.5f},{1,0,height*0.6f,height*0.04f,height*0.4f},{4,width,height*0.6f,width*0.4f,width*0.4f},{0,width*0.6f,height*0.4f,width*0.4f,height*0.04f},{6,width*0.8f,height*0.3f,0,width/66},{2,width*0.9f,height*0.85f,height*0.04f,height*0.04f},{2,width*0.14f,height*0.9f,height*0.04f,height*0.04f},{5,width*0.1f,height*0.5f,height*0.04f,PI+HALF_PI}};
+  float data[][] = new float[][]{{3,width*0.1f,height*0.3f,width*0.5f,width*0.5f},{1,0,height*0.6f,height*0.04f,height*0.4f},{4,width,height*0.6f,width*0.4f,width*0.4f},{0,width*0.6f,height*0.4f,width*0.4f,height*0.04f},{6,width*0.8f,height*0.3f,0,width/66},{2,width*0.9f,height*0.8f,height*0.04f,height*0.04f},{2,width*0.14f,height*0.9f,height*0.04f,height*0.04f},{5,width*0.1f,height*0.5f,height*0.04f,PI+HALF_PI}};
   
   demoLevel(){
     lvl = new level(data);
@@ -610,6 +643,7 @@ class end {
     }
   }
 }
+
 class enemy {
   float x;
   float y;
@@ -727,6 +761,7 @@ class enemy {
     }
   }
 }
+
 class game {
   public int lvl;
 
@@ -765,8 +800,8 @@ class game {
     levels.add(new level(new float[][]{{6,width-height*0.04f,height*0.5f,0,width*0.015f},{6,width-height*0.04f,height*0.1f,0,width*0.015f},{5,width*0.5f,height*0.4f,height*0.04f,7*PI/4},{1,0,height*0.38f,width*0.4f,height*0.04f},{1,width-height*0.12f,0,height*0.04f,height*0.35f},{1,width-height*0.12f,height*0.45f,height*0.04f,height*0.55f},{2,width*0.5f,height*0.6f,height*0.04f,height*0.04f},{2,width*0.1f,height*0.5f,height*0.04f,height*0.04f}}));
     levels.add(new level(new float[][]{{2,width*0.9f,height*0.9f,height*0.04f,height*0.04f},{2,width*0.1f,height*0.6f,height*0.04f,height*0.04f},{5,width*0.9f,height*0.6f,height*0.04f,PI+HALF_PI*0.7f},{0,width*0.1f-height*0.02f,height*0.88f,height*0.04f,height*0.04f},{5,width*0.5f,height*0.75f,height*0.04f,PI+HALF_PI*0.7f},{1,width*0.4f-height*0.04f,0,height*0.04f,height*0.5f},{1,width*0.6f,0,height*0.04f,height*0.5f},{0,0,height*0.28f,width*0.4f,height*0.04f},{0,width*0.6f,height*0.28f,width*0.4f,height*0.04f}}));
     levels.add(new level(new float[][]{{0,width*0.3f,height*0.7f,width*0.4f,height*0.04f},{6,width*0.5f,height*0.5f,0,width*0.015f},{1,width*0.6f,height*0.5f,width*0.4f,height*0.04f},{1,0,height*0.54f,width*0.4f,height*0.04f},{1,0,height*0.2f,width*0.4f,height*0.04f},{2,width*0.1f,height*0.9f,height*0.04f,height*0.04f},{2,width*0.62f,height*0.4f,height*0.04f,height*0.04f}}));
-    levels.add(new level(new float[][]{}));
-    levels.add(new level(new float[][]{}));
+    levels.add(new level(new float[][]{{2,width*0.2f,height*0.6f,height*0.04f,height*0.04f},{2,width*0.5f,height*0.5f,height*0.04f,height*0.04f},{2,width*0.8f,height*0.6f,height*0.04f,height*0.04f},{1,width*0.4f-height*0.04f,0,height*0.04f,height*0.4f},{1,width*0.6f,0,height*0.04f,height*0.4f},{0,0,height*0.3f,width*0.4f,height*0.04f},{1,width*0.6f,height*0.3f,width*0.4f,height*0.04f},{0,width*0.6f,height*0.88f,width*0.4f,height*0.04f}}));
+    levels.add(new level(new float[][]{{5,width*0.1f,height*0.8f,height*0.04f,PI+HALF_PI*0.3f},{3,width*0.6f,height*0.5f,width*0.5f,width*0.5f},{1,width*0.2f,height*0.3f,width*0.8f,height*0.04f},{1,width*0.3f,height*0.7f,height*0.04f,height*0.2f}}));
     levels.add(new level(new float[][]{}));
     levels.add(new level(new float[][]{}));
     levels.add(new level(new float[][]{}));
@@ -827,7 +862,7 @@ class help {
 
         y = mouseY - ys;
         if (y > 0) y = 0;
-        if(y < -1* width*3.1f + height*0.8f) y = PApplet.parseInt(-1* width*3.1f+ height*0.8f);
+        if(y < -1* width*3.3f + height*0.8f) y = PApplet.parseInt(-1* width*3.3f+ height*0.8f);
       }
     } else {
       Mstatus = 0;
@@ -886,6 +921,8 @@ class help {
     help_music_btn.run();
     button help_reset_btn = new button(PApplet.parseInt(width*0.15f),PApplet.parseInt( width*2.9f+y), 0, PApplet.parseInt(width*0.03f), color(255), color(0), color(0));
     help_reset_btn.run();
+    button help_demo_btn = new button(PApplet.parseInt(width*0.15f),PApplet.parseInt( width*3.1f+y), 41, PApplet.parseInt(width*0.03f), color(255), color(0), color(0));
+    help_demo_btn.run();
     
     if (darkmode) {
       fill(255);
@@ -900,6 +937,7 @@ class help {
     text("toggle darkmode on/off", width*0.25f, width*2.46f+y, width*0.7f, height);
     text("toggle music on/off", width*0.25f, width*2.66f+y, width*0.7f, height);
     text("restarts the current level", width*0.25f, width*2.86f+y, width*0.7f, height);
+    text("runs a demo level", width*0.25f, width*3.06f+y, width*0.7f, height);
     
     if (darkmode) {
       stroke(255);
@@ -907,7 +945,7 @@ class help {
       stroke(0);
     }
     strokeWeight(height/400);
-    line(0,width*3.1f+y,width,width*3.1f+y);
+    line(0,width*3.3f+y,width,width*3.3f+y);
     
     if (darkmode) {
       fill(255);
@@ -917,7 +955,7 @@ class help {
     textSize(width*0.037f);
     textAlign(CENTER);
 
-    text("https://github.com/Felixpointexe/bounz/", width*0.1f, width*3.2f+y, width*0.8f, height);
+    text("https://github.com/Felixpointexe/bounz/", width*0.1f, width*3.4f+y, width*0.8f, height);
     
    
 
@@ -927,7 +965,8 @@ class help {
 
     back_btn.run();
 
-    if (back_btn.pressed()) {
+    if (back_btn.pressed() && btnTimeout > 20) {
+      mn.music_btn.click = 1;
       mn.y = 0;
       page = 0;
     }
@@ -1023,6 +1062,7 @@ class level {
     }
     if (back_btn.pressed()) {
       if (demo) {
+        btnTimeout = 0;
         page = 2;
       } else {
         mn.y = 0;
@@ -1209,6 +1249,7 @@ class level {
     t = 0;
   }
 }
+
 class menu {
 
   button darkmode_btn;
@@ -1377,6 +1418,7 @@ class tornado {
     this.tornadoHeight = tornadoHeight;
   }
 }
+
 class turner {
   float x;
   float y;
